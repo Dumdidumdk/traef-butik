@@ -105,8 +105,11 @@ function start({ port = Number(process.env.PORT) || 3000, dataDir = process.env.
     server.once('error', reject);
     server.listen(port, () => {
       const p = server.address().port;
+      const ips = lanAdresser();
+      // Foretræk en privat LAN-adresse (192.168.x, 10.x, 172.16–31.x) til check-in-sedlen
+      const lan = ips.find((ip) => /^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(ip)) || ips[0];
+      api.saetKundeUrl(lan ? `http://${lan}${p === 80 ? '' : ':' + p}` : '');
       if (!stille) {
-        const ips = lanAdresser();
         console.log('');
         console.log('  Træf-butikken kører!');
         console.log(`  Data: ${dataDir}`);

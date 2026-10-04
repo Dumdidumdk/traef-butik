@@ -78,8 +78,11 @@ const hentIndb = (id) => {
 
 const hentDeltager = (id) => q('SELECT * FROM deltagere WHERE id = ?').get(id);
 
+// Adressen deltagerne skal skrive (sættes af server.js ud fra LAN-IP og port) – vises på check-in-sedlen
+let kundeUrl = '';
+
 function info() {
-  return { ...D.indstillinger(), personale_opsat: !!D.hentIndstilling('personale_kode') };
+  return { ...D.indstillinger(), personale_opsat: !!D.hentIndstilling('personale_kode'), kunde_url: kundeUrl };
 }
 
 const aktiveVarer = () =>
@@ -870,4 +873,8 @@ function init(dir) {
   billedDir = dir;
 }
 
-module.exports = { init, haandter, info };
+function saetKundeUrl(u) {
+  kundeUrl = u || '';
+}
+
+module.exports = { init, haandter, info, saetKundeUrl };

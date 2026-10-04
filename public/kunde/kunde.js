@@ -219,9 +219,9 @@ function visSaldo(blink) {
 }
 
 // ---------- Varer ----------
-async function hentVarer() {
+async function hentVarer(liste) {
   try {
-    tilstand.varer = await api('/api/varer');
+    tilstand.varer = Array.isArray(liste) ? liste : await api('/api/varer');
   } catch (e) {
     if (e.status !== 401) toast(e.message, 'fejl');
     return;
@@ -814,6 +814,8 @@ function startStream() {
     }
   });
   es.addEventListener('indbetaling', e => { const d = laes(e); if (d) modtagIndbetaling(d, true); });
+  // Serveren sender alle aktive varer, når en vare ændres (fx bliver udsolgt)
+  es.addEventListener('varer', e => { const d = laes(e); if (Array.isArray(d)) hentVarer(d); });
   es.addEventListener('info', e => {
     const d = laes(e);
     if (d) {
