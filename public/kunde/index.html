@@ -102,36 +102,42 @@
         </button>
         <div class="kurv-indhold" id="kurv-indhold">
           <h2 class="kurv-titel">Din kurv</h2>
-          <div id="kvittering" class="kvittering" role="status" hidden></div>
-          <ul class="kurv-linjer" id="kurv-linjer"></ul>
-          <p class="kurv-tom" id="kurv-tom">Kurven er tom. Tryk på en vare for at lægge den i.</p>
+          <!-- Varelisten scroller; resten står fast nederst -->
+          <div class="kurv-rulle" id="kurv-rulle">
+            <div id="kvittering" class="kvittering" role="status" hidden></div>
+            <ul class="kurv-linjer" id="kurv-linjer"></ul>
+            <p class="kurv-tom" id="kurv-tom">Kurven er tom. Tryk på en vare for at lægge den i.</p>
+          </div>
 
-          <div class="kurv-total"><span>Total</span><span id="kurv-total">0 kr.</span></div>
+          <div class="kurv-bund">
+            <span class="kurv-rulle-hint" id="kurv-rulle-hint" aria-hidden="true" hidden></span>
+            <div class="kurv-total"><span>Total</span><span id="kurv-total">0 kr.</span></div>
 
-          <fieldset class="levering" id="levering">
-            <legend>Levering</legend>
-            <label class="valg" id="valg-bord">
-              <input type="radio" name="levering" value="bord">
-              <span><span id="bord-tekst">Bring til min plads</span><small id="bord-mangler"></small></span>
+            <fieldset class="levering" id="levering">
+              <legend>Levering</legend>
+              <label class="valg" id="valg-bord">
+                <input type="radio" name="levering" value="bord">
+                <span><span id="bord-tekst">Bring til min plads</span><small id="bord-mangler"></small></span>
+              </label>
+              <label class="valg">
+                <input type="radio" name="levering" value="hent" checked>
+                <span>Jeg henter selv – giv mig besked</span>
+              </label>
+            </fieldset>
+
+            <label class="felt felt-lille">
+              <span>Note <small>(valgfri)</small></span>
+              <input id="note" type="text" maxlength="200" placeholder="fx uden is">
             </label>
-            <label class="valg">
-              <input type="radio" name="levering" value="hent" checked>
-              <span>Jeg henter selv – giv mig besked</span>
-            </label>
-          </fieldset>
 
-          <label class="felt felt-lille">
-            <span>Note <small>(valgfri)</small></span>
-            <input id="note" type="text" maxlength="200" placeholder="fx uden is">
-          </label>
-
-          <p class="formfejl" role="alert" id="bestil-fejl"></p>
-          <button type="button" class="knap knap-primaer knap-stor knap-bred" id="bestil" disabled>Bestil</button>
-          <p class="mangler" id="mangler" hidden>
-            <span id="mangler-tekst"></span>
-            <button type="button" class="link-knap" data-aabn="dlg-penge">Sæt penge ind</button>
-          </p>
-          <p class="lukket-note" id="lukket-note" hidden>Butikken er lukket – bestilling er slået fra.</p>
+            <p class="formfejl" role="alert" id="bestil-fejl"></p>
+            <button type="button" class="knap knap-primaer knap-stor knap-bred" id="bestil" disabled>Bestil</button>
+            <p class="mangler" id="mangler" hidden>
+              <span id="mangler-tekst"></span>
+              <button type="button" class="link-knap" data-aabn="dlg-penge">Sæt penge ind</button>
+            </p>
+            <p class="lukket-note" id="lukket-note" hidden>Butikken er lukket – bestilling er slået fra.</p>
+          </div>
         </div>
       </aside>
     </div>
