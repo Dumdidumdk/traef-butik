@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+<defs><clipPath id="chk"><path d="M48 34 l6 -8 l6 8 l6 -8 l6 8 l6 -8 l6 8 l6 -8 l6 8 l6 -8 l6 8 l6 -8 l6 8 l6 -8 l6 8 l6 -8 l6 8 l6 -8 c-6 30 -6 100 0 136 l-6 8 l-6 -8 l-6 8 l-6 -8 l-6 8 l-6 -8 l-6 8 l-6 -8 l-6 8 l-6 -8 l-6 8 l-6 -8 l-6 8 l-6 -8 l-6 8 l-6 -8 l-6 8 c6 -36 6 -106 0 -136z"/></clipPath></defs>
+<ellipse cx="100" cy="188" rx="48" ry="6" fill="#000" opacity=".3"/>
+
+<path d="M48 34 l6 -8 l6 8 l6 -8 l6 8 l6 -8 l6 8 l6 -8 l6 8 l6 -8 l6 8 l6 -8 l6 8 l6 -8 l6 8 l6 -8 l6 8 l6 -8 c-6 30 -6 100 0 136 l-6 8 l-6 -8 l-6 8 l-6 -8 l-6 8 l-6 -8 l-6 8 l-6 -8 l-6 8 l-6 -8 l-6 8 l-6 -8 l-6 8 l-6 -8 l-6 8 l-6 -8 l-6 8 c6 -36 6 -106 0 -136z" fill="#e3262f"/>
+<path d="M54 120 q46 -30 92 0 v44 h-92z" fill="#ffd23f" clip-path="url(#chk)"/>
+<text x="100" y="80" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="24" fill="#ffd23f" stroke="#8a0f16" stroke-width="2.5" paint-order="stroke">CHIPS</text>
+<g stroke="#d99a1c" stroke-width="1.5">
+  <path d="M72 128 q12 -16 28 -4 q4 14 -10 18 q-16 2 -18 -14z" fill="#ffcf5a"/>
+  <path d="M98 136 q14 -18 30 -2 q2 14 -14 16 q-14 0 -16 -14z" fill="#ffc23f"/>
+  <path d="M84 150 q12 -12 24 0 q0 12 -12 12 q-12 0 -12 -12z" fill="#ffd774"/>
+</g>
+<rect x="58" y="36" width="6" height="128" rx="3" fill="#fff" opacity=".2"/>
+</svg>
