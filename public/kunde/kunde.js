@@ -346,6 +346,27 @@ function aendrAntal(id, delta) {
   gemKurv();
   opdaterVareKort(id);
   visKurv();
+  visKurvLinje(id);
+}
+
+// Vis "rul for flere", når varelisten i kurven ikke kan ses helt
+function opdaterRulleHint() {
+  const r = $('#kurv-rulle');
+  const skjult = r.scrollHeight - r.clientHeight - r.scrollTop;
+  const hint = $('#kurv-rulle-hint');
+  hint.hidden = !(r.clientHeight > 0 && skjult > 6);
+  if (!hint.hidden) hint.textContent = `↓ Rul for at se alle ${$$('#kurv-linjer li').length} varer i kurven`;
+}
+
+// Rul varelisten, så den ændrede linje kan ses
+function visKurvLinje(id) {
+  const r = $('#kurv-rulle');
+  const li = $(`#kurv-linjer li[data-id="${id}"]`);
+  if (!li || !r.clientHeight) return;
+  const top = li.getBoundingClientRect().top - r.getBoundingClientRect().top + r.scrollTop;
+  if (top < r.scrollTop) r.scrollTop = top;
+  else if (top + li.offsetHeight > r.scrollTop + r.clientHeight) r.scrollTop = top + li.offsetHeight - r.clientHeight;
+  opdaterRulleHint();
 }
 
 function kurvTotal() {
@@ -361,6 +382,8 @@ function visKurv() {
   const i = tilstand.info;
   if (!i || !tilstand.mig) return;
   const ul = $('#kurv-linjer');
+  const rulle = $('#kurv-rulle');
+  const rullePos = rulle.scrollTop;
   ul.innerHTML = '';
   for (const [id, n] of tilstand.kurv) {
     const v = tilstand.varer.find(x => x.id === id);
@@ -370,12 +393,12 @@ function visKurv() {
     li.innerHTML = `
       <div><div class="kurv-linje-navn">${esc(v.navn)}${v.udsolgt ? ' <small>(udsolgt)</small>' : ''}</div>
         <div class="kurv-linje-pris">${kr(v.pris_oere)} pr. stk.</div></div>
-      <div class="kurv-linje-sum">${kr(v.pris_oere * n)}</div>
       <div class="antal">
         <button type="button" data-d="-1" aria-label="Én ${esc(v.navn)} mindre">−</button>
         <output aria-label="Antal ${esc(v.navn)}">${n}</output>
         <button type="button" data-d="1" aria-label="Én ${esc(v.navn)} mere" ${n >= 20 || v.udsolgt ? 'disabled' : ''}>+</button>
-      </div>`;
+      </div>
+      <div class="kurv-linje-sum">${kr(v.pris_oere * n)}</div>`;
     li.dataset.id = id;
     $$('button', li).forEach(b => b.addEventListener('click', () => {
       aendrAntal(id, +b.dataset.d);
@@ -385,6 +408,8 @@ function visKurv() {
     }));
     ul.append(li);
   }
+  rulle.scrollTop = rullePos;
+  opdaterRulleHint();
 
   const { total, antal } = kurvTotal();
   const tom = antal === 0;
@@ -402,7 +427,7 @@ function visKurv() {
   bordRadio.disabled = !bordMulig;
   $('#valg-bord').classList.toggle('deaktiv', !bordMulig);
   $('#bord-mangler').textContent = levAktiv && !bordMulig
-    ? `Bringes kun ved køb over ${kr(min)} – du mangler ${kr(min - total)}`
+    ? `Bringes kun ved køb fra ${kr(min)} – du mangler ${kr(min - total)}`
     : '';
   if (!bordMulig && tilstand.levering === 'bord') tilstand.levering = 'hent';
   $$('input[name=levering]').forEach(r => { r.checked = r.value === tilstand.levering; });
@@ -482,9 +507,12 @@ function initKurv() {
     if (r.checked) tilstand.levering = r.value;
     visKurv();
   }));
+  $('#kurv-rulle').addEventListener('scroll', opdaterRulleHint, { passive: true });
+  window.addEventListener('resize', opdaterRulleHint);
   $('#kurv-handtag').addEventListener('click', () => {
     const aaben = $('#kurv').classList.toggle('aaben');
     $('#kurv-handtag').setAttribute('aria-expanded', aaben);
+    opdaterRulleHint();
   });
 }
 

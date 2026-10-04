@@ -213,33 +213,51 @@ legend { font-weight: 650; padding: 0; margin-bottom: 8px; }
 /* ===== Kurv ===== */
 .kurv {
   position: sticky; top: calc(var(--top-hoejde) + 16px);
-  max-height: calc(100vh - var(--top-hoejde) - 32px); overflow: auto;
+  max-height: calc(100vh - var(--top-hoejde) - 32px); overflow: hidden;
+  display: flex; flex-direction: column;
   background: var(--flade); border: 2px solid var(--kant); border-radius: 18px;
   box-shadow: 0 0 30px rgba(255, 61, 190, .10);
 }
 .kurv-handtag { display: none; }
-.kurv-indhold { padding: 18px; }
-.kurv-titel { font-size: 1.3rem; margin-bottom: 12px; }
+/* Kun varelisten scroller – total, levering, note og Bestil står fast nederst */
+.kurv-indhold { display: flex; flex-direction: column; min-height: 0; flex: 0 1 auto; padding: 18px; }
+.kurv-titel { font-size: 1.3rem; margin-bottom: 8px; flex: none; }
+.kurv-rulle {
+  flex: 0 1 auto; min-height: 72px; overflow-y: auto; overscroll-behavior: contain;
+  margin: 0 -18px; padding: 0 18px;
+  scrollbar-width: thin; scrollbar-color: var(--cyan) transparent;
+  /* Skygger viser, at der er mere at scrolle til */
+  background:
+    linear-gradient(var(--flade) 30%, rgba(21, 26, 51, 0)) top / 100% 36px no-repeat local,
+    linear-gradient(rgba(21, 26, 51, 0), var(--flade) 70%) bottom / 100% 36px no-repeat local,
+    radial-gradient(farthest-side at 50% 0, rgba(34, 230, 255, .5), transparent) top / 100% 14px no-repeat scroll,
+    radial-gradient(farthest-side at 50% 100%, rgba(34, 230, 255, .5), transparent) bottom / 100% 14px no-repeat scroll;
+}
+.kurv-rulle-hint { display: block; text-align: center; color: var(--cyan); font-size: .85rem; font-weight: 650; padding: 4px 0 0; }
+.kurv-bund { flex: none; border-top: 2px solid var(--kant); padding-top: 4px; }
+.levering .valg { padding: 9px 12px; margin-bottom: 6px; }
+.levering legend { margin-bottom: 6px; }
 .kurv-linjer { list-style: none; margin: 0; padding: 0; }
 .kurv-linje {
-  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; align-items: center;
-  padding: 10px 0; border-bottom: 1px solid var(--kant);
+  display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 4px 10px; align-items: center;
+  padding: 8px 0; border-bottom: 1px solid var(--kant);
 }
+.kurv-linje:last-child { border-bottom: 0; }
 .kurv-linje-navn { font-weight: 650; overflow-wrap: anywhere; }
 .kurv-linje-pris { color: var(--daemp); font-size: .9rem; }
-.kurv-linje-sum { font-weight: 750; text-align: right; font-variant-numeric: tabular-nums; }
-.antal { display: flex; align-items: center; gap: 6px; }
+.kurv-linje-sum { font-weight: 750; text-align: right; font-variant-numeric: tabular-nums; min-width: 4.6em; }
+.antal { display: flex; align-items: center; gap: 4px; }
 .antal button {
-  width: 40px; height: 40px; border-radius: 10px; border: 2px solid var(--kant); background: var(--bg2);
+  width: 38px; height: 38px; border-radius: 10px; border: 2px solid var(--kant); background: var(--bg2);
   font-size: 1.3rem; font-weight: 800; cursor: pointer; display: grid; place-items: center;
 }
 .antal button:hover { border-color: var(--cyan); }
 .antal button:disabled { opacity: .4; cursor: not-allowed; }
-.antal output { min-width: 28px; text-align: center; font-weight: 800; font-size: 1.1rem; }
+.antal output { min-width: 24px; text-align: center; font-weight: 800; font-size: 1.1rem; }
 .kurv-tom { color: var(--daemp); margin: 4px 0 12px; }
 .kurv-total {
   display: flex; justify-content: space-between; align-items: baseline;
-  margin: 14px 0 16px; font-size: 1.35rem; font-weight: 850;
+  margin: 8px 0 10px; font-size: 1.35rem; font-weight: 850;
 }
 #kurv-total { color: var(--groen); font-variant-numeric: tabular-nums; }
 .levering small { display: block; color: #ffd98a; font-size: .85rem; }
@@ -382,10 +400,9 @@ legend { font-weight: 650; padding: 0; margin-bottom: 8px; }
   .kurv-handtag::after { content: "▲"; font-size: .8rem; color: var(--cyan); margin-left: 6px; }
   .kurv.aaben .kurv-handtag::after { content: "▼"; }
   .kurv-handtag-total { margin-left: auto; color: var(--groen); font-weight: 850; }
-  .kurv-indhold { display: none; overflow: auto; padding-top: 12px; }
-  .kurv.aaben .kurv-indhold { display: block; }
+  .kurv-indhold { display: none; padding-top: 10px; padding-bottom: 12px; }
+  .kurv.aaben .kurv-indhold { display: flex; }
   .kurv-titel { display: none; }
-  #bestil { position: sticky; bottom: 10px; z-index: 1; }
   .forbindelse { bottom: 80px; }
   .toasts { bottom: 80px; }
   .notif-spoerg { right: 16px; bottom: 80px; max-width: none; }
