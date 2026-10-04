@@ -391,7 +391,7 @@ function visKurv() {
     const li = document.createElement('li');
     li.className = 'kurv-linje';
     li.innerHTML = `
-      <div><div class="kurv-linje-navn">${esc(v.navn)}${v.udsolgt ? ' <small>(udsolgt)</small>' : ''}</div>
+      <div><div class="kurv-linje-navn">${esc(v.navn).replace(/ (\d|l\b|cl\b|ml\b|g\b)/g, ' $1')}${v.udsolgt ? ' <small>(udsolgt)</small>' : ''}</div>
         <div class="kurv-linje-pris">${kr(v.pris_oere)} pr. stk.</div></div>
       <div class="antal">
         <button type="button" data-d="-1" aria-label="Én ${esc(v.navn)} mindre">−</button>

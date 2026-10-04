@@ -14,7 +14,7 @@
   --roed: #ff5470;
   --radius: 14px;
   --fokus: 0 0 0 3px var(--bg), 0 0 0 6px var(--gul);
-  --kurv-bredde: 360px;
+  --kurv-bredde: 390px;
   --top-hoejde: 76px;
 }
 
@@ -243,7 +243,7 @@ legend { font-weight: 650; padding: 0; margin-bottom: 8px; }
   padding: 8px 0; border-bottom: 1px solid var(--kant);
 }
 .kurv-linje:last-child { border-bottom: 0; }
-.kurv-linje-navn { font-weight: 650; overflow-wrap: anywhere; }
+.kurv-linje-navn { font-weight: 650; font-size: .95rem; line-height: 1.25; overflow-wrap: break-word; }
 .kurv-linje-pris { color: var(--daemp); font-size: .9rem; }
 .kurv-linje-sum { font-weight: 750; text-align: right; font-variant-numeric: tabular-nums; min-width: 4.6em; }
 .antal { display: flex; align-items: center; gap: 4px; }
