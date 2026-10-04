@@ -16,6 +16,7 @@ Det skal virke **uden internet**: ingen CDN'er, ingen eksterne skrifttyper, inge
 - Live-opdateringer: Server-Sent Events (`EventSource`). Ingen WebSockets.
 - Alle beløb er **heltal i øre** (`pris_oere`, `saldo_oere`). Vis som `12,50 kr.` / `100 kr.`.
 - Start: `start-butik.cmd` (Windows, dobbeltklik) → `runtime\node\node.exe server/server.js`. Port 3000 (env `PORT`).
+  Env `DATA_DIR` (standard `<projekt>/data`) styrer hvor database og billeder ligger – bruges af tests.
   Ved start skrives adresserne i konsollen, fx `Kundesiden: http://192.168.1.20:3000`.
 
 ## Filer og ejere
