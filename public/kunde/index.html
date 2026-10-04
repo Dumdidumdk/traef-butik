@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="da">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0a0c16">
+  <title>Træf-butikken</title>
+  <link rel="stylesheet" href="/kunde/kunde.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230a0c16'/%3E%3Cpath d='M9 11h14l-2 13H11z' fill='none' stroke='%2322e6ff' stroke-width='2.5' stroke-linejoin='round'/%3E%3Cpath d='M16 11V6' stroke='%23ff3dbe' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E">
+  <script src="/kunde/kunde.js" defer></script>
+</head>
+<body>
+  <a class="spring-over" href="#varer">Spring til varerne</a>
+
+  <!-- Indlæser -->
+  <div id="indlaeser" class="indlaeser" aria-live="polite">Indlæser …</div>
+
+  <!-- ===== Ikke logget ind ===== -->
+  <main id="visning-login" class="login-visning" hidden>
+    <div class="login-kort">
+      <p class="login-forord">Velkommen til</p>
+      <h1 class="traef-navn" data-traef-navn>Træf-butikken</h1>
+      <p class="login-undertekst">Bestil sodavand, slik og mad direkte til din plads.</p>
+
+      <div class="faner" role="tablist" hidden aria-label="Log ind eller opret">
+        <button type="button" role="tab" id="fane-login" aria-controls="panel-login" aria-selected="true">Log ind</button>
+        <button type="button" role="tab" id="fane-ny" aria-controls="panel-ny" aria-selected="false" tabindex="-1" hidden>Ny deltager</button>
+      </div>
+
+      <form id="panel-login" class="login-form" role="tabpanel" aria-labelledby="fane-login" novalidate>
+        <label class="felt">
+          <span>PC-nummer</span>
+          <input name="pc_nr" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="username" required>
+        </label>
+        <label class="felt">
+          <span>PIN-kode</span>
+          <input name="pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="current-password" required>
+        </label>
+        <p class="formfejl" role="alert" data-fejl></p>
+        <button type="submit" class="knap knap-primaer knap-stor knap-bred">Log ind</button>
+      </form>
+
+      <form id="panel-ny" class="login-form" role="tabpanel" aria-labelledby="fane-ny" novalidate hidden>
+        <label class="felt">
+          <span>PC-nummer <small>(står på din plads)</small></span>
+          <input name="pc_nr" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="username" required>
+        </label>
+        <label class="felt">
+          <span>Dit navn eller nick</span>
+          <input name="navn" type="text" maxlength="40" autocomplete="nickname" required>
+        </label>
+        <label class="felt">
+          <span>Vælg PIN-kode <small>(4–6 cifre)</small></span>
+          <input name="pin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="new-password" required>
+        </label>
+        <label class="felt">
+          <span>Gentag PIN-kode</span>
+          <input name="pin2" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="new-password" required>
+        </label>
+        <p class="formfejl" role="alert" data-fejl></p>
+        <button type="submit" class="knap knap-primaer knap-stor knap-bred">Opret og log ind</button>
+      </form>
+      <p id="tilmelding-lukket" class="login-note">Har du ikke fået en PIN? Spørg crew ved indgangen.</p>
+    </div>
+  </main>
+
+  <!-- ===== Logget ind ===== -->
+  <div id="visning-butik" hidden>
+    <header class="topbjaelke">
+      <div class="top-venstre">
+        <span class="top-navn" data-traef-navn>Træf-butikken</span>
+        <span class="top-bruger" id="top-bruger"></span>
+      </div>
+      <div class="top-saldo" aria-live="polite">
+        <span class="saldo-label">Saldo</span>
+        <span class="saldo-beloeb" id="saldo">0 kr.</span>
+      </div>
+      <nav class="top-knapper" aria-label="Konto">
+        <button type="button" class="knap knap-groen" data-aabn="dlg-penge">Sæt penge ind</button>
+        <button type="button" class="knap" data-aabn="dlg-ordrer">Mine ordrer <span class="maerke" id="ordre-maerke" hidden></span></button>
+        <button type="button" class="knap knap-diskret" id="log-ud">Log ud</button>
+      </nav>
+    </header>
+
+    <div id="aktive-ordrer" class="aktive-ordrer" aria-live="polite" hidden></div>
+
+    <div class="butik-layout">
+      <main class="vare-omraade" id="varer" tabindex="-1">
+        <div id="lukket-banner" class="banner banner-advarsel" role="status" hidden>
+          <strong>Butikken er lukket lige nu.</strong> Du kan se varerne, men ikke bestille.
+        </div>
+        <nav class="kategori-knapper" id="kategori-knapper" aria-label="Kategorier"></nav>
+        <div id="vare-liste"></div>
+      </main>
+
+      <aside class="kurv" id="kurv" aria-label="Kurv">
+        <button type="button" class="kurv-handtag" id="kurv-handtag" aria-expanded="false" aria-controls="kurv-indhold">
+          <span class="kurv-handtag-tekst"><span aria-hidden="true">🛒</span> Kurv · <span id="kurv-antal">0 varer</span></span>
+          <span class="kurv-handtag-total" id="kurv-handtag-total">0 kr.</span>
+        </button>
+        <div class="kurv-indhold" id="kurv-indhold">
+          <h2 class="kurv-titel">Din kurv</h2>
+          <div id="kvittering" class="kvittering" role="status" hidden></div>
+          <ul class="kurv-linjer" id="kurv-linjer"></ul>
+          <p class="kurv-tom" id="kurv-tom">Kurven er tom. Tryk på en vare for at lægge den i.</p>
+
+          <div class="kurv-total"><span>Total</span><span id="kurv-total">0 kr.</span></div>
+
+          <fieldset class="levering" id="levering">
+            <legend>Levering</legend>
+            <label class="valg" id="valg-bord">
+              <input type="radio" name="levering" value="bord">
+              <span><span id="bord-tekst">Bring til min plads</span><small id="bord-mangler"></small></span>
+            </label>
+            <label class="valg">
+              <input type="radio" name="levering" value="hent" checked>
+              <span>Jeg henter selv – giv mig besked</span>
+            </label>
+          </fieldset>
+
+          <label class="felt felt-lille">
+            <span>Note <small>(valgfri)</small></span>
+            <input id="note" type="text" maxlength="200" placeholder="fx uden is">
+          </label>
+
+          <p class="formfejl" role="alert" id="bestil-fejl"></p>
+          <button type="button" class="knap knap-primaer knap-stor knap-bred" id="bestil" disabled>Bestil</button>
+          <p class="mangler" id="mangler" hidden>
+            <span id="mangler-tekst"></span>
+            <button type="button" class="link-knap" data-aabn="dlg-penge">Sæt penge ind</button>
+          </p>
+          <p class="lukket-note" id="lukket-note" hidden>Butikken er lukket – bestilling er slået fra.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- ===== Mine ordrer ===== -->
+  <dialog id="dlg-ordrer" class="dialog" aria-labelledby="dlg-ordrer-titel">
+    <div class="dialog-hoved">
+      <h2 id="dlg-ordrer-titel">Mine ordrer</h2>
+      <button type="button" class="luk" data-luk aria-label="Luk">✕</button>
+    </div>
+    <div class="dialog-krop">
+      <p class="formfejl" role="alert" id="ordrer-fejl"></p>
+      <ul class="ordre-liste" id="ordre-liste"></ul>
+      <p class="tom-tekst" id="ordrer-tom">Du har ikke bestilt noget endnu.</p>
+    </div>
+  </dialog>
+
+  <!-- ===== Sæt penge ind ===== -->
+  <dialog id="dlg-penge" class="dialog" aria-labelledby="dlg-penge-titel">
+    <div class="dialog-hoved">
+      <h2 id="dlg-penge-titel">Sæt penge ind</h2>
+      <button type="button" class="luk" data-luk aria-label="Luk">✕</button>
+    </div>
+    <div class="dialog-krop">
+      <div class="mobilepay" id="mobilepay-boks">
+        <span class="mobilepay-label">MobilePay til butikken</span>
+        <span class="mobilepay-nr" id="mobilepay-nr"></span>
+      </div>
+      <ol class="trin">
+        <li>Betal beløbet med MobilePay eller kontant i butikken.</li>
+        <li>Udfyld nedenfor og tryk <strong>Jeg har betalt</strong>.</li>
+        <li>Beløbet kan bruges, så snart butikken har godkendt det.</li>
+      </ol>
+      <p class="udbetal-note">Penge, du ikke bruger, kan du få udbetalt, når træffet slutter – spørg crew.</p>
+      <form id="penge-form" novalidate>
+        <fieldset class="hurtig-beloeb">
+          <legend>Beløb</legend>
+          <div class="hurtig-knapper">
+            <button type="button" class="knap" data-beloeb="50">50 kr.</button>
+            <button type="button" class="knap" data-beloeb="100">100 kr.</button>
+            <button type="button" class="knap" data-beloeb="200">200 kr.</button>
+            <button type="button" class="knap" data-beloeb="500">500 kr.</button>
+          </div>
+          <label class="felt">
+            <span>Eget beløb (kr.)</span>
+            <input name="beloeb" type="text" inputmode="decimal" maxlength="7" required>
+          </label>
+        </fieldset>
+        <fieldset class="metode">
+          <legend>Hvordan har du betalt?</legend>
+          <label class="valg valg-inline"><input type="radio" name="metode" value="mobilepay" checked><span>MobilePay</span></label>
+          <label class="valg valg-inline"><input type="radio" name="metode" value="kontant"><span>Kontant</span></label>
+          <label class="valg valg-inline"><input type="radio" name="metode" value="andet"><span>Andet</span></label>
+        </fieldset>
+        <label class="felt">
+          <span id="reference-label">Dit navn i MobilePay</span>
+          <input name="reference" type="text" maxlength="80" aria-describedby="reference-hjaelp">
+          <small id="reference-hjaelp" class="hjaelp">Så butikken kan finde din betaling.</small>
+        </label>
+        <p class="formfejl" role="alert" data-fejl></p>
+        <p class="formok" role="status" data-ok></p>
+        <button type="submit" class="knap knap-groen knap-stor knap-bred">Jeg har betalt</button>
+      </form>
+      <h3 class="under-titel">Dine indbetalinger</h3>
+      <ul class="indbetaling-liste" id="indbetaling-liste"></ul>
+      <p class="tom-tekst" id="indbetalinger-tom">Ingen indbetalinger endnu.</p>
+    </div>
+  </dialog>
+
+  <!-- ===== Ordre klar ===== -->
+  <dialog id="dlg-klar" class="dialog dialog-klar" aria-labelledby="klar-tekst">
+    <div class="klar-indhold">
+      <div class="klar-ikon" aria-hidden="true">🔔</div>
+      <p id="klar-tekst" class="klar-tekst"></p>
+      <p id="klar-undertekst" class="klar-undertekst"></p>
+      <button type="button" class="knap knap-primaer knap-stor" data-luk>OK</button>
+    </div>
+  </dialog>
+
+  <!-- Spørg om notifikationer (kun én gang) -->
+  <div id="notif-spoerg" class="notif-spoerg" role="region" aria-label="Besked når ordren er klar" hidden>
+    <p>Vil du have en besked på skærmen, når din ordre er klar – også mens du spiller?</p>
+    <div class="notif-knapper">
+      <button type="button" class="knap knap-primaer" id="notif-ja">Ja tak</button>
+      <button type="button" class="knap knap-diskret" id="notif-nej">Nej tak</button>
+    </div>
+  </div>
+
+  <div id="toasts" class="toasts" aria-live="assertive"></div>
+  <div id="forbindelse" class="forbindelse" role="status" hidden>Forbindelsen til butikken er afbrudt – prøver igen …</div>
+</body>
+</html>
