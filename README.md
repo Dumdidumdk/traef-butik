@@ -5,7 +5,9 @@ og betaler med en forudbetalt saldo. Butikken ser ordrerne live bag disken. Virk
 
 ## Sådan kommer du i gang
 
-1. Kopiér hele mappen `traef-butik` (inkl. `runtime`) over på bærbaren ved disken.
+1. Kopiér hele mappen `traef-butik` (inkl. `runtime`) over på bærbaren ved disken – eller hent den færdige pakke
+   **traef-butik-klar-til-brug-v1.0.zip** under [Releases](https://github.com/Dumdidumdk/traef-butik/releases)
+   (med Node.js indeni) og pak den ud.
 2. Dobbeltklik på **`start-butik.cmd`**. Vinduet viser adresserne, fx:
    ```
    Kundesiden:   http://192.168.1.20:3000
