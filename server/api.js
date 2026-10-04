@@ -306,7 +306,7 @@ async function kundeNyOrdre(req, res) {
       }
       if (total < ind.levering_min_oere) {
         throw fejl(409, 'levering_ikke_mulig',
-          `Levering til bordet kræver mindst ${kr(ind.levering_min_oere)}. Vælg afhentning eller køb lidt mere.`);
+          `Levering til bordet kræver et køb på mindst ${kr(ind.levering_min_oere)} Vælg afhentning eller køb lidt mere.`);
       }
     }
     const t = nu();
