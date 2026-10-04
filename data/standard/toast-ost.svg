@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+<defs><clipPath id="tok"><path d="M44 96 c0 -26 14 -38 30 -38 c10 -12 42 -12 52 0 c16 0 30 12 30 38 v60 q0 10 -10 10 h-92 q-10 0 -10 -10 z"/></clipPath></defs>
+<ellipse cx="100" cy="188" rx="48" ry="6" fill="#000" opacity=".3"/>
+
+<path d="M44 96 c0 -26 14 -38 30 -38 c10 -12 42 -12 52 0 c16 0 30 12 30 38 v60 q0 10 -10 10 h-92 q-10 0 -10 -10 z" transform="translate(6 10)" fill="#b8742f"/>
+
+<path d="M44 96 c0 -26 14 -38 30 -38 c10 -12 42 -12 52 0 c16 0 30 12 30 38 v60 q0 10 -10 10 h-92 q-10 0 -10 -10 z" transform="translate(100 112) scale(1.07) translate(-100 -110)" fill="#ffd23f"/>
+<path d="M54 168 q2 18 7 18 q5 0 5 -18z M88 170 q2 22 8 22 q6 0 6 -22z M126 168 q2 14 6 14 q5 0 5 -14z M154 120 q16 2 14 8 q-2 6 -14 4z M46 112 q-16 2 -14 8 q2 6 14 4z" fill="#ffd23f"/>
+<path d="M44 96 c0 -26 14 -38 30 -38 c10 -12 42 -12 52 0 c16 0 30 12 30 38 v60 q0 10 -10 10 h-92 q-10 0 -10 -10 z" fill="#f0b85f" stroke="#a8632a" stroke-width="5"/>
+<g clip-path="url(#tok)" stroke="#a8632a" stroke-width="5" opacity=".75">
+  <path d="M40 100 l60 -60 M40 130 l90 -90 M50 150 l100 -100 M80 160 l80 -80 M110 165 l60 -60"/>
+</g>
+</svg>

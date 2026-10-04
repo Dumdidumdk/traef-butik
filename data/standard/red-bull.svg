@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+<defs><clipPath id="rbk"><path d="M78 30 q0 -8 8 -8 h28 q8 0 8 8 v146 q0 6 -8 6 h-28 q-8 0 -8 -6z"/></clipPath><pattern id="rbm" width="11" height="11" patternUnits="userSpaceOnUse"><rect width="11" height="11" fill="#c9d1d9"/><rect width="5.5" height="5.5" fill="#1c2f6b"/><rect x="5.5" y="5.5" width="5.5" height="5.5" fill="#1c2f6b"/></pattern></defs>
+<ellipse cx="100" cy="188" rx="48" ry="6" fill="#000" opacity=".3"/>
+
+<path d="M78 30 q0 -8 8 -8 h28 q8 0 8 8 v146 q0 6 -8 6 h-28 q-8 0 -8 -6z" fill="#333"/>
+<g clip-path="url(#rbk)">
+<rect x="60" y="20" width="80" height="170" fill="url(#rbm)"/>
+<rect x="60" y="92" width="80" height="50" fill="#e9edf1"/>
+<circle cx="100" cy="108" r="10" fill="#f6c315"/>
+<path d="M84 114 q6 -8 13 -4 l-2 -5 q-6 -1 -11 9z M116 114 q-6 -8 -13 -4 l2 -5 q6 -1 11 9z" fill="#d6132a"/>
+<text x="100" y="134" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="9" fill="#d6132a">Red Bull</text></g>
+<ellipse cx="100" cy="24" rx="18" ry="5" fill="#d7dde3" stroke="#9aa3ab" stroke-width="1.5"/>
+<ellipse cx="104" cy="23" rx="6" ry="2" fill="#8d969e"/>
+<rect x="84" y="34" width="5" height="140" rx="2.5" fill="#fff" opacity=".22"/>
+</svg>
