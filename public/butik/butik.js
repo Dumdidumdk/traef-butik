@@ -104,22 +104,26 @@ function tidKlasse(min) {
 function knapperHtml(o) {
   const naeste = { ny: ['laves', 'Start'], laves: ['klar', 'Klar'], klar: ['leveret', o.levering === 'bord' ? 'Leveret' : 'Afhentet'] }[o.status];
   const tilbage = { laves: 'ny', klar: 'laves' }[o.status];
+  // Små knapper: ikon + tekst (teksten skjules i kompakt visning, når der er to)
   return `<button class="knap groen naeste" data-handling="${naeste[0]}">${naeste[1]}</button>
-    ${tilbage ? `<button class="knap lille" data-handling="${tilbage}">↩ Tilbage</button>` : ''}
-    ${o.status !== 'klar' ? `<button class="knap lille fare" data-handling="annulleret">Annuller</button>` : ''}`;
+    <div class="smaa">
+    ${tilbage ? `<button class="knap lille" data-handling="${tilbage}" title="Tilbage" aria-label="Tilbage"><span aria-hidden="true">↩</span><span class="tekst">Tilbage</span></button>` : ''}
+    ${o.status !== 'klar' ? `<button class="knap lille fare" data-handling="annulleret" title="Annuller" aria-label="Annuller"><span aria-hidden="true">✕</span><span class="tekst">Annuller</span></button>` : ''}
+    </div>`;
 }
 
 function kortHtml(o) {
   const min = minutterSiden(o.oprettet);
   const bord = o.levering === 'bord';
   const linjer = (o.linjer || []).map((l) => `<li><span class="x">${l.antal}×</span> ${esc(l.navn)}</li>`).join('');
-  return `<div class="kort-top"><span class="kort-nr">#${o.nr ?? o.id}</span>
-      <span class="${tidKlasse(min)}" data-tid title="Bestilt kl. ${klokken(o.oprettet)}">${tidTekst(min)}</span></div>
-    <div class="kort-pc">PC ${esc(o.pc_nr)}</div>
-    <div class="kort-navn">${esc(o.navn)}</div>
-    <span class="maerke ${bord ? 'bord' : 'hent'}">${bord ? 'BRING TIL PLADS' : 'AFHENTES'}</span>
+  // Flad opbygning: CSS lægger felterne ud forskelligt i kompakt og stor visning
+  return `<div class="kort-pc">PC ${esc(o.pc_nr)}</div>
+    <span class="${tidKlasse(min)}" data-tid title="Bestilt kl. ${klokken(o.oprettet)}">${tidTekst(min)}</span>
+    <div class="kort-meta"><span class="kort-nr">#${o.nr ?? o.id}</span>
+      <span class="maerke ${bord ? 'bord' : 'hent'}">${bord ? 'BRING TIL PLADS' : 'AFHENTES'}</span>
+      <span class="kort-navn">${esc(o.navn)}</span></div>
     <ul class="linjer">${linjer}</ul>
-    ${o.note ? `<div class="note">${esc(o.note)}</div>` : ''}
+    ${o.note ? `<div class="note" title="${esc(o.note)}">${esc(o.note)}</div>` : ''}
     <div class="kort-knapper">${knapperHtml(o)}</div>`;
 }
 
@@ -220,11 +224,19 @@ function taelOp() {
       tom = document.createElement('p');
       tom.className = 'tom';
       tom._id = Infinity;
-      tom.textContent = soegning || filter !== 'alle' ? 'Ingen der passer til søgningen' : 'Ingen ordrer';
+      tom.textContent = tomTekst(n);
       liste.append(tom);
     } else if (!erTom && tom) tom.remove();
   }
   document.title = `${nyeIalt ? `(${nyeIalt}) ` : ''}${titelNavn} – Butiksskærm`;
+}
+
+// Tekst i en tom kolonne – passer både til filter og søgning
+function tomTekst(liste) {
+  if (filter === 'hent' && liste === 'klar-bord') return 'Skjult – filteret viser kun afhentning';
+  if (filter === 'bord' && liste === 'klar-hent') return 'Skjult – filteret viser kun levering';
+  if (soegning) return 'Ingen der passer til søgningen';
+  return 'Ingen ordrer her';
 }
 
 function anvendFilter() {
@@ -411,6 +423,22 @@ document.querySelectorAll('[data-filter]').forEach((k) => k.addEventListener('cl
   });
   anvendFilter();
 }));
+
+// ---------- Kompakt / stor visning ----------
+let storVisning = false;
+try { storVisning = localStorage.getItem('butik-visning') === 'stor'; } catch { /* privat vindue */ }
+function visVisning() {
+  document.body.classList.toggle('stor', storVisning);
+  const k = $('#visning-knap');
+  k.textContent = storVisning ? '▦ Kompakt visning' : '▤ Stor visning';
+  k.setAttribute('aria-pressed', String(storVisning));
+}
+$('#visning-knap').addEventListener('click', () => {
+  storVisning = !storVisning;
+  try { localStorage.setItem('butik-visning', storVisning ? 'stor' : 'kompakt'); } catch { /* ligegyldigt */ }
+  visVisning();
+});
+visVisning();
 
 // ---------- Fuldskærm ----------
 const fsKnap = $('#fuldskaerm-knap');

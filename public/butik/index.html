@@ -27,6 +27,7 @@
     <button class="knap lille" id="indbetalinger-knap" aria-expanded="false" aria-controls="indbetalinger-panel">
       Indbetalinger <span class="badge" id="indbetalinger-antal" hidden>0</span></button>
     <button class="knap lille" id="udsolgt-knap" aria-expanded="false" aria-controls="udsolgt-panel">Udsolgt</button>
+    <button class="knap lille" id="visning-knap" aria-pressed="false" title="Skift mellem kompakte og store ordrekort">▤ Stor visning</button>
     <button class="knap lille" id="lyd-knap" aria-pressed="true">🔊 Lyd til</button>
     <button class="knap lille" id="fuldskaerm-knap">⛶ Fuldskærm</button>
     <a class="knap lille" href="/admin">Admin</a>
@@ -47,14 +48,13 @@
     <h2 id="h-laves" class="kolonne-titel laves">Laves <span class="antal" data-antal="laves">0</span></h2>
     <div class="kort-liste" data-liste="laves"></div>
   </section>
-  <section class="kolonne" data-kolonne="klar" aria-labelledby="h-klar">
-    <h2 id="h-klar" class="kolonne-titel klar">Klar <span class="antal" data-antal="klar">0</span></h2>
-    <div class="kort-liste">
-      <h3 class="under-titel bord">Skal bringes ud <span class="antal" data-antal="klar-bord">0</span></h3>
-      <div class="under-liste" data-liste="klar-bord"></div>
-      <h3 class="under-titel hent">Venter på afhentning <span class="antal" data-antal="klar-hent">0</span></h3>
-      <div class="under-liste" data-liste="klar-hent"></div>
-    </div>
+  <section class="kolonne" data-kolonne="klar-bord" aria-labelledby="h-klar-bord">
+    <h2 id="h-klar-bord" class="kolonne-titel klar"><span>Klar <span class="titel-under bord">· Bring ud</span></span> <span class="antal" data-antal="klar-bord">0</span></h2>
+    <div class="kort-liste" data-liste="klar-bord"></div>
+  </section>
+  <section class="kolonne" data-kolonne="klar-hent" aria-labelledby="h-klar-hent">
+    <h2 id="h-klar-hent" class="kolonne-titel klar"><span>Klar <span class="titel-under hent">· Afhentning</span></span> <span class="antal" data-antal="klar-hent">0</span></h2>
+    <div class="kort-liste" data-liste="klar-hent"></div>
   </section>
 </main>
 
