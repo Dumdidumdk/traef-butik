@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Butiksskærm</title>
+<link rel="stylesheet" href="/admin/faelles.css">
+<link rel="stylesheet" href="/butik/butik.css">
+</head>
+<body>
+<div id="blink" class="blink" aria-hidden="true"></div>
+
+<header class="top">
+  <div class="top-titel">
+    <h1><span class="neon-titel" id="traef-navn">Butiksskærm</span></h1>
+    <span class="forbindelse" id="forbindelse" title="Live-forbindelse"><span class="prik"></span><span class="tekst">Forbinder…</span></span>
+  </div>
+  <div class="top-vaerktoej">
+    <label class="soeg"><span class="skjult-visuelt">Søg på PC-nr eller ordrenr</span>
+      <input type="search" id="soeg" placeholder="Søg PC / #ordre" inputmode="numeric" autocomplete="off"></label>
+    <div class="segment" role="group" aria-label="Filter">
+      <button class="knap lille aktiv" data-filter="alle" aria-pressed="true">Alle</button>
+      <button class="knap lille" data-filter="bord" aria-pressed="false">Kun levering</button>
+      <button class="knap lille" data-filter="hent" aria-pressed="false">Kun afhentning</button>
+    </div>
+    <button class="knap lille" id="indbetalinger-knap" aria-expanded="false" aria-controls="indbetalinger-panel">
+      Indbetalinger <span class="badge" id="indbetalinger-antal" hidden>0</span></button>
+    <button class="knap lille" id="udsolgt-knap" aria-expanded="false" aria-controls="udsolgt-panel">Udsolgt</button>
+    <button class="knap lille" id="lyd-knap" aria-pressed="true">🔊 Lyd til</button>
+    <button class="knap lille" id="fuldskaerm-knap">⛶ Fuldskærm</button>
+    <a class="knap lille" href="/admin">Admin</a>
+  </div>
+</header>
+
+<div class="lyd-advarsel" id="lyd-advarsel" hidden>
+  <button class="knap lille primaer" id="lyd-aktiver">Klik her for at slå lyd til</button>
+  <span>Browseren kræver et klik, før den må afspille lyd.</span>
+</div>
+
+<main class="tavle" id="tavle">
+  <section class="kolonne" data-kolonne="ny" aria-labelledby="h-ny">
+    <h2 id="h-ny" class="kolonne-titel ny">Nye <span class="antal" data-antal="ny">0</span></h2>
+    <div class="kort-liste" data-liste="ny"></div>
+  </section>
+  <section class="kolonne" data-kolonne="laves" aria-labelledby="h-laves">
+    <h2 id="h-laves" class="kolonne-titel laves">Laves <span class="antal" data-antal="laves">0</span></h2>
+    <div class="kort-liste" data-liste="laves"></div>
+  </section>
+  <section class="kolonne" data-kolonne="klar" aria-labelledby="h-klar">
+    <h2 id="h-klar" class="kolonne-titel klar">Klar <span class="antal" data-antal="klar">0</span></h2>
+    <div class="kort-liste">
+      <h3 class="under-titel bord">Skal bringes ud <span class="antal" data-antal="klar-bord">0</span></h3>
+      <div class="under-liste" data-liste="klar-bord"></div>
+      <h3 class="under-titel hent">Venter på afhentning <span class="antal" data-antal="klar-hent">0</span></h3>
+      <div class="under-liste" data-liste="klar-hent"></div>
+    </div>
+  </section>
+</main>
+
+<details class="seneste" id="seneste">
+  <summary>Seneste leverede <span class="antal" data-antal="seneste">0</span> <span class="hjaelp">(sidste 2 timer)</span></summary>
+  <div class="seneste-liste" id="seneste-liste"></div>
+</details>
+
+<aside class="panel" id="indbetalinger-panel" hidden aria-label="Afventende indbetalinger">
+  <div class="panel-hoved"><h2>Afventende indbetalinger</h2><button class="knap lille" data-luk>Luk</button></div>
+  <div class="panel-indhold" id="indbetalinger-liste"></div>
+</aside>
+
+<aside class="panel" id="udsolgt-panel" hidden aria-label="Udsolgt">
+  <div class="panel-hoved"><h2>Udsolgt / på lager</h2><button class="knap lille" data-luk>Luk</button></div>
+  <p class="hjaelp panel-hjaelp">Tryk på en vare for at skifte. Udsolgte varer kan ikke bestilles.</p>
+  <div class="panel-indhold" id="udsolgt-liste"></div>
+</aside>
+
+<script type="module" src="/butik/butik.js"></script>
+</body>
+</html>

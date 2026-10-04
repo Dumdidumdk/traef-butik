@@ -1,0 +1,160 @@
+/* Butiksskærm – læses på afstand */
+html, body { height: 100%; }
+body { display: flex; flex-direction: column; overflow: hidden; }
+
+/* Topbjælke */
+.top {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px;
+  padding: 10px 16px; background: var(--flade); border-bottom: 2px solid var(--kant);
+}
+.top-titel { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.top h1 { font-size: 1.5rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.top-vaerktoej { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.soeg input { width: 190px; min-height: 40px; font-size: 1.05rem; }
+.segment { display: inline-flex; gap: 4px; }
+.badge {
+  display: inline-block; min-width: 1.6em; padding: 0 .45em; border-radius: 99px;
+  background: var(--magenta); color: #fff; font-size: .9rem; line-height: 1.6em; text-align: center;
+  box-shadow: 0 0 10px var(--magenta);
+}
+.forbindelse { display: inline-flex; align-items: center; gap: 6px; color: var(--daempet); font-size: .9rem; white-space: nowrap; }
+.forbindelse .prik { width: 12px; height: 12px; border-radius: 50%; background: var(--roed); box-shadow: 0 0 8px var(--roed); }
+.forbindelse.ok .prik { background: var(--groen); box-shadow: 0 0 8px var(--groen); }
+
+.lyd-advarsel {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding: 8px 16px; background: #2a2200; border-bottom: 2px solid var(--gul); color: var(--gul); font-weight: 600;
+}
+
+/* Tavlen med tre kolonner */
+.tavle {
+  flex: 1; min-height: 0;
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; padding: 12px 16px;
+}
+.kolonne { display: flex; flex-direction: column; min-height: 0; background: #0c0e1a; border: 2px solid var(--kant); border-radius: 14px; }
+.kolonne-titel {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px; font-size: 1.6rem; text-transform: uppercase; letter-spacing: .06em;
+  border-bottom: 2px solid var(--kant);
+}
+.kolonne-titel.ny { color: var(--lilla); }
+.kolonne-titel.laves { color: var(--cyan); }
+.kolonne-titel.klar { color: var(--groen); }
+.antal {
+  font-size: .8em; min-width: 1.8em; padding: 0 .4em; text-align: center; border-radius: 8px;
+  background: var(--flade-2); color: var(--tekst);
+}
+.kort-liste { flex: 1; overflow-y: auto; padding: 10px; overscroll-behavior: contain; }
+.under-titel {
+  display: flex; align-items: center; justify-content: space-between;
+  margin: 4px 0 8px; padding: 6px 10px; border-radius: 8px; font-size: 1.05rem; text-transform: uppercase; letter-spacing: .05em;
+}
+.under-titel.bord { color: var(--magenta); background: rgba(255,61,216,.1); }
+.under-titel.hent { color: var(--cyan); background: rgba(25,230,255,.08); margin-top: 14px; }
+.under-titel .antal { font-size: .9em; }
+.tom { color: #6f7598; text-align: center; padding: 18px 8px; font-size: 1.05rem; }
+
+/* Ordrekort */
+.kort {
+  position: relative; margin-bottom: 10px; padding: 12px 14px 12px 18px;
+  background: var(--flade); border: 2px solid var(--kant); border-radius: 12px;
+  content-visibility: auto; contain-intrinsic-size: auto 260px;
+}
+.kort::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 8px; border-radius: 10px 0 0 10px; background: var(--cyan); }
+.kort.bord::before { background: var(--magenta); }
+.kort-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.kort-nr { font-size: 1.7rem; font-weight: 800; color: var(--daempet); }
+.kort-tid { font-size: 1.15rem; font-weight: 800; padding: 2px 10px; border-radius: 8px; background: var(--flade-2); white-space: nowrap; }
+.kort-tid.gul { background: var(--gul); color: #231c00; }
+.kort-tid.roed { background: var(--roed); color: #fff; box-shadow: 0 0 12px var(--roed); }
+.kort-pc { font-size: 3.4rem; font-weight: 900; line-height: 1; letter-spacing: -.01em; margin: 2px 0 2px; }
+.kort-navn { font-size: 1.2rem; color: var(--daempet); font-weight: 600; overflow-wrap: anywhere; }
+.maerke {
+  display: inline-block; margin: 8px 0 6px; padding: 4px 10px; border-radius: 8px;
+  font-weight: 900; font-size: 1.05rem; letter-spacing: .05em;
+}
+.maerke.bord { background: var(--magenta); color: #fff; box-shadow: 0 0 12px rgba(255,61,216,.5); }
+.maerke.hent { background: var(--cyan); color: #00262d; }
+.linjer { list-style: none; margin: 4px 0; padding: 0; font-size: 1.35rem; font-weight: 700; }
+.linjer li { padding: 2px 0; }
+.linjer .x { color: var(--gul); }
+.note {
+  margin: 8px 0 4px; padding: 8px 10px; border-radius: 8px;
+  background: #2a2200; border: 2px solid var(--gul); color: #fff3b0; font-size: 1.15rem; font-weight: 700; overflow-wrap: anywhere;
+}
+.note::before { content: "NOTE: "; color: var(--gul); }
+.kort-knapper { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; align-items: stretch; }
+.kort-knapper .naeste { flex: 1 1 100%; min-height: 64px; font-size: 1.5rem; text-transform: uppercase; letter-spacing: .04em; }
+.kort-knapper .lille { flex: 1 1 0; }
+.kort.travl { opacity: .6; pointer-events: none; }
+
+/* Ny ordre blinker */
+.kort.ny-ankommet { animation: kort-blink .5s ease-in-out 4; }
+@keyframes kort-blink { 50% { border-color: var(--lilla); box-shadow: 0 0 26px var(--lilla); background: #24184a; } }
+.blink { position: fixed; inset: 0; pointer-events: none; z-index: 50; opacity: 0; background: radial-gradient(circle, rgba(155,107,255,.0) 30%, rgba(155,107,255,.45) 100%); }
+.blink.aktiv { animation: skaerm-blink .9s ease-out; }
+@keyframes skaerm-blink { 0%, 40% { opacity: 1; } 100% { opacity: 0; } }
+
+/* Seneste leverede */
+.seneste { margin: 0 16px 12px; background: var(--flade); border: 2px solid var(--kant); border-radius: 12px; }
+.seneste summary { cursor: pointer; padding: 10px 14px; font-weight: 800; font-size: 1.1rem; min-height: 44px; }
+.seneste[open] .seneste-liste { max-height: 32vh; overflow-y: auto; padding: 0 14px 10px; }
+.seneste-raekke { display: grid; grid-template-columns: 5em 6em minmax(0, 1fr) auto auto; gap: 10px; align-items: center; padding: 6px 0; border-top: 1px solid var(--kant); }
+.seneste-raekke .pc { font-weight: 900; font-size: 1.2rem; }
+.seneste-raekke .varer { color: var(--daempet); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.status-maerke { font-weight: 800; font-size: .85rem; padding: 2px 8px; border-radius: 6px; background: rgba(61,255,143,.15); color: var(--groen); }
+.status-maerke.annulleret { background: rgba(255,71,98,.15); color: var(--roed); }
+
+/* Sidepaneler */
+.panel {
+  position: fixed; top: 0; right: 0; bottom: 0; z-index: 60; width: min(440px, 100vw);
+  display: flex; flex-direction: column; background: var(--flade); border-left: 2px solid var(--cyan);
+  box-shadow: -10px 0 40px rgba(0,0,0,.7);
+}
+.panel-hoved { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 16px; border-bottom: 2px solid var(--kant); }
+.panel-hoved h2 { font-size: 1.3rem; }
+.panel-hjaelp { margin: 10px 16px 0; }
+.panel-indhold { flex: 1; overflow-y: auto; padding: 12px 16px; }
+.indb { padding: 12px; margin-bottom: 10px; border: 2px solid var(--kant); border-radius: 12px; background: var(--flade-2); }
+.indb-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.indb-pc { font-size: 1.6rem; font-weight: 900; }
+.indb-beloeb { font-size: 1.6rem; font-weight: 900; color: var(--groen); }
+.indb-info { color: var(--daempet); margin: 4px 0 10px; overflow-wrap: anywhere; }
+.indb-info strong { color: var(--tekst); }
+.indb .knapper { display: flex; gap: 8px; }
+.indb .knapper .knap { flex: 1; }
+.vare-skift {
+  display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 10px;
+  margin-bottom: 8px; padding: 10px 14px; min-height: 52px; text-align: left;
+}
+.vare-skift .tilstand { font-size: .9rem; padding: 3px 10px; border-radius: 6px; background: rgba(61,255,143,.15); color: var(--groen); white-space: nowrap; }
+.vare-skift.udsolgt { border-color: var(--roed); }
+.vare-skift.udsolgt .navn { text-decoration: line-through; color: var(--daempet); }
+.vare-skift.udsolgt .tilstand { background: var(--roed); color: #fff; }
+
+/* Store skærme: større kort */
+@media (min-width: 1800px) {
+  .kort-pc { font-size: 4.2rem; }
+  .linjer { font-size: 1.5rem; }
+}
+
+/* Smalle skærme: kolonner under hinanden, hele siden ruller */
+@media (max-width: 900px) {
+  body { overflow: auto; height: auto; display: block; }
+  .tavle { grid-template-columns: 1fr; }
+  .kort-liste { overflow: visible; }
+  .top-vaerktoej { width: 100%; }
+  .soeg { flex: 1 1 100%; }
+  .soeg input { width: 100%; }
+}
+@media (max-width: 480px) {
+  .top { padding: 10px 12px; }
+  .tavle { padding: 10px 12px; }
+  .seneste { margin: 0 12px 12px; }
+  .top h1 { font-size: 1.25rem; }
+  .segment { flex: 1 1 100%; }
+  .segment .knap { flex: 1; padding: .3em .4em; }
+  .kort-pc { font-size: 2.8rem; }
+  .seneste-raekke { grid-template-columns: 4.5em minmax(0, 1fr) auto; }
+  .seneste-raekke .nr, .seneste-raekke .tid { display: none; }
+}

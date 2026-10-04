@@ -1,0 +1,112 @@
+/* Fælles tema for butiksskærm og admin – mørkt med neon */
+:root {
+  --bg: #07080f;
+  --flade: #11131f;
+  --flade-2: #181b2b;
+  --kant: #2a2e48;
+  --tekst: #f2f4ff;
+  --daempet: #a3a9c9;
+  --cyan: #19e6ff;
+  --magenta: #ff3dd8;
+  --groen: #3dff8f;
+  --gul: #ffd400;
+  --roed: #ff4762;
+  --lilla: #9b6bff;
+  --radius: 12px;
+  --skrift: system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--tekst);
+  font-family: var(--skrift);
+  font-size: 16px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+}
+[hidden] { display: none !important; }
+a { color: var(--cyan); }
+h1, h2, h3 { line-height: 1.15; margin: 0; }
+
+/* Knapper */
+.knap {
+  display: inline-flex; align-items: center; justify-content: center; gap: .4em;
+  min-height: 44px; padding: .5em 1em;
+  border: 2px solid var(--kant); border-radius: 10px;
+  background: var(--flade-2); color: var(--tekst);
+  font: inherit; font-weight: 700; cursor: pointer; text-decoration: none;
+  transition: background .12s, border-color .12s, transform .05s;
+  -webkit-tap-highlight-color: transparent;
+}
+.knap:hover { border-color: var(--cyan); }
+.knap:active { transform: translateY(1px); }
+.knap:disabled { opacity: .5; cursor: default; }
+.knap:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible {
+  outline: 3px solid var(--cyan); outline-offset: 2px;
+}
+.knap.primaer { background: var(--cyan); border-color: var(--cyan); color: #001a1f; }
+.knap.primaer:hover { background: #7ff2ff; }
+.knap.groen { background: var(--groen); border-color: var(--groen); color: #002210; }
+.knap.groen:hover { background: #8dffbb; }
+.knap.fare { background: transparent; border-color: var(--roed); color: var(--roed); }
+.knap.fare:hover { background: var(--roed); color: #fff; }
+.knap.lille { min-height: 36px; padding: .3em .7em; font-size: .9rem; }
+.knap.aktiv { border-color: var(--cyan); box-shadow: 0 0 0 1px var(--cyan) inset, 0 0 12px rgba(25,230,255,.35); }
+
+/* Felter */
+input, select, textarea {
+  font: inherit; color: var(--tekst);
+  background: #0c0e19; border: 2px solid var(--kant); border-radius: 10px;
+  padding: .55em .75em; min-height: 44px; width: 100%;
+}
+textarea { min-height: 80px; resize: vertical; }
+input::placeholder { color: #6f7598; }
+label { display: block; font-weight: 600; }
+label > span { display: block; margin-bottom: .3em; }
+.felt { margin-bottom: 1em; }
+.hjaelp { color: var(--daempet); font-size: .9rem; font-weight: 400; margin-top: .3em; }
+.fejl-tekst { color: var(--roed); font-weight: 700; min-height: 1.4em; }
+
+/* Login */
+.login-skaerm {
+  position: fixed; inset: 0; z-index: 100;
+  display: grid; place-items: center; padding: 16px;
+  background: radial-gradient(ellipse at top, #1a1240 0%, var(--bg) 60%);
+}
+.login-boks {
+  width: 100%; max-width: 420px;
+  background: var(--flade); border: 2px solid var(--kant); border-radius: 18px;
+  padding: 28px 24px; box-shadow: 0 0 40px rgba(155,107,255,.25);
+}
+.login-boks h1 { font-size: 1.6rem; margin-bottom: .2em; }
+.login-boks .undertitel { color: var(--daempet); margin: 0 0 1.4em; }
+.login-boks .knap { width: 100%; min-height: 52px; font-size: 1.1rem; }
+.neon-titel { color: var(--cyan); text-shadow: 0 0 12px rgba(25,230,255,.6); }
+
+/* Dialog */
+dialog.boks {
+  border: 2px solid var(--kant); border-radius: 16px; padding: 0;
+  background: var(--flade); color: var(--tekst);
+  width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 32px);
+}
+dialog.boks::backdrop { background: rgba(0,0,0,.7); }
+dialog.boks .indhold { padding: 22px 20px; }
+dialog.boks h2 { margin-bottom: .6em; }
+dialog.boks .knapper { display: flex; gap: .6em; justify-content: flex-end; flex-wrap: wrap; margin-top: 1.2em; }
+
+/* Besked (toast) */
+.beskeder { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 200;
+  display: flex; flex-direction: column; gap: 8px; width: min(460px, calc(100vw - 32px)); pointer-events: none; }
+.besked { background: var(--flade-2); border: 2px solid var(--cyan); border-radius: 10px;
+  padding: .7em 1em; font-weight: 600; box-shadow: 0 6px 24px rgba(0,0,0,.6); animation: ind .2s ease-out; }
+.besked.fejl { border-color: var(--roed); }
+@keyframes ind { from { opacity: 0; transform: translateY(8px); } }
+
+.skjult-visuelt { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition: none !important; }
+}

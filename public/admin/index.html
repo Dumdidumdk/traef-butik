@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin – Træf-butik</title>
+<link rel="stylesheet" href="/admin/faelles.css">
+<link rel="stylesheet" href="/admin/admin.css">
+</head>
+<body>
+<header class="top">
+  <h1><span class="neon-titel" id="traef-navn">Træf-butikken</span> <span class="top-under">Admin</span></h1>
+  <div class="top-knapper">
+    <a class="knap lille primaer" href="/butik">Butiksskærm</a>
+    <button class="knap lille" id="log-ud">Log ud</button>
+  </div>
+</header>
+
+<nav class="faner" role="tablist" aria-label="Admin-faner">
+  <a class="fane" role="tab" href="#checkin" data-fane="checkin">Check-in</a>
+  <a class="fane" role="tab" href="#varer" data-fane="varer">Varer</a>
+  <a class="fane" role="tab" href="#deltagere" data-fane="deltagere">Deltagere</a>
+  <a class="fane" role="tab" href="#indbetalinger" data-fane="indbetalinger">Indbetalinger <span class="badge" id="indb-badge" hidden>0</span></a>
+  <a class="fane" role="tab" href="#udbetaling" data-fane="udbetaling">Udbetaling</a>
+  <a class="fane" role="tab" href="#indstillinger" data-fane="indstillinger">Indstillinger</a>
+  <a class="fane" role="tab" href="#rapport" data-fane="rapport">Rapport</a>
+</nav>
+
+<main class="indhold">
+  <!-- Check-in -->
+  <section id="fane-checkin" class="fane-side" role="tabpanel" hidden>
+    <div class="side-hoved"><h2>Check-in</h2></div>
+    <form id="checkin-form" class="checkin" novalidate autocomplete="off">
+      <div class="to-felter checkin-top">
+        <label class="felt"><span>PC-nr</span><input name="pc_nr" inputmode="numeric" maxlength="4" autocomplete="off" required></label>
+        <label class="felt"><span>Navn</span><input name="navn" maxlength="40" autocomplete="off" required></label>
+      </div>
+      <div class="advarsel" id="checkin-advarsel" hidden></div>
+      <div class="felt"><span class="felt-titel" id="start-titel">Startbeløb</span>
+        <div class="hurtig" role="group" aria-labelledby="start-titel">
+          <button type="button" class="knap" data-start="0">0 kr.</button>
+          <button type="button" class="knap" data-start="100">100 kr.</button>
+          <button type="button" class="knap" data-start="200">200 kr.</button>
+          <button type="button" class="knap" data-start="300">300 kr.</button>
+          <label class="hurtig-andet"><span class="skjult-visuelt">Andet beløb i kr.</span><input name="start" inputmode="decimal" placeholder="Andet beløb" value="0"></label>
+        </div></div>
+      <div class="felt"><span class="felt-titel" id="metode-titel">Betalt med</span>
+        <div class="hurtig" role="radiogroup" aria-labelledby="metode-titel">
+          <label class="valg"><input type="radio" name="metode" value="mobilepay" checked><span>MobilePay</span></label>
+          <label class="valg"><input type="radio" name="metode" value="kontant"><span>Kontant</span></label>
+          <label class="valg"><input type="radio" name="metode" value="andet"><span>Andet</span></label>
+        </div></div>
+      <p class="fejl-tekst" role="alert"></p>
+      <button class="knap primaer stor" type="submit">Opret</button>
+      <p class="hjaelp">PIN laves automatisk. Tryk Enter for at oprette.</p>
+    </form>
+    <div class="kvittering" id="kvittering" hidden tabindex="-1">
+      <div class="seddel" id="seddel"></div>
+      <div class="knaprad kvittering-knapper">
+        <button class="knap stor" id="udskriv">🖨 Udskriv seddel</button>
+        <button class="knap primaer stor" id="naeste-deltager">Næste deltager →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Varer -->
+  <section id="fane-varer" class="fane-side" role="tabpanel" hidden>
+    <div class="side-hoved">
+      <h2>Varer</h2>
+      <div class="knaprad">
+        <label class="afkryds"><input type="checkbox" id="vis-skjulte"> Vis skjulte</label>
+        <button class="knap primaer" id="ny-vare">+ Ny vare</button>
+      </div>
+    </div>
+    <p class="hjaelp">Træk et billede ind på en vare for at skifte billede. Skjulte varer kan kunderne ikke se.</p>
+    <div class="vare-liste" id="vare-liste"></div>
+  </section>
+
+  <!-- Deltagere -->
+  <section id="fane-deltagere" class="fane-side" role="tabpanel" hidden>
+    <div class="side-hoved">
+      <h2>Deltagere</h2>
+      <a class="knap primaer" href="#checkin">+ Opret deltager (check-in)</a>
+    </div>
+    <label class="felt"><span class="skjult-visuelt">Søg</span>
+      <input type="search" id="deltager-soeg" placeholder="Søg på PC-nr eller navn" autocomplete="off"></label>
+    <div class="to-delt">
+      <div class="deltager-liste" id="deltager-liste"></div>
+      <div class="deltager-detalje" id="deltager-detalje" hidden></div>
+    </div>
+  </section>
+
+  <!-- Indbetalinger -->
+  <section id="fane-indbetalinger" class="fane-side" role="tabpanel" hidden>
+    <div class="side-hoved"><h2>Indbetalinger</h2><button class="knap lille" id="indb-opdater">Opdater</button></div>
+    <h3 class="afsnit">Afventer godkendelse</h3>
+    <div id="indb-afventer"></div>
+    <h3 class="afsnit">Historik</h3>
+    <div class="tabel-ramme"><table class="tabel" id="indb-historik">
+      <thead><tr><th>Tid</th><th>PC</th><th>Navn</th><th class="tal">Beløb</th><th>Metode</th><th>Reference</th><th>Status</th></tr></thead>
+      <tbody></tbody></table></div>
+  </section>
+
+  <!-- Udbetaling -->
+  <section id="fane-udbetaling" class="fane-side" role="tabpanel" hidden>
+    <div class="side-hoved"><h2>Udbetaling af restsaldo</h2><button class="knap lille" id="udb-opdater">Opdater</button></div>
+    <div class="noegletal" id="udb-tal"></div>
+    <label class="felt"><span class="skjult-visuelt">Find PC</span>
+      <input type="search" id="udb-soeg" placeholder="Find PC-nr eller navn" autocomplete="off"></label>
+    <div id="udb-mangler"></div>
+    <h3 class="afsnit">Udbetalt</h3>
+    <div class="tabel-ramme"><table class="tabel" id="udb-historik">
+      <thead><tr><th>Tid</th><th>PC</th><th>Navn</th><th class="tal">Beløb</th><th>Metode</th><th>Reference</th></tr></thead>
+      <tbody></tbody></table></div>
+  </section>
+
+  <!-- Indstillinger -->
+  <section id="fane-indstillinger" class="fane-side" role="tabpanel" hidden>
+    <div class="side-hoved"><h2>Indstillinger</h2></div>
+    <form id="indstillinger-form" class="indstillinger" novalidate>
+      <label class="felt"><span>Træffets navn</span>
+        <input name="traef_navn" maxlength="60" required>
+        <div class="hjaelp">Vises øverst på kundesiden og butiksskærmen.</div></label>
+
+      <div class="kontakt-raekke">
+        <div><strong>Butikken er åben</strong>
+          <div class="hjaelp">Når den er lukket, kan kunderne se varerne, men ikke bestille.</div></div>
+        <label class="kontakt"><input type="checkbox" name="butik_aaben"><span class="kontakt-spor" aria-hidden="true"></span><span class="skjult-visuelt">Butikken er åben</span></label>
+      </div>
+      <div class="kontakt-raekke">
+        <div><strong>Tilmelding er åben</strong>
+          <div class="hjaelp">Når den er lukket (anbefalet), opretter crew deltagerne under Check-in. Åben = deltagerne kan selv oprette sig på kundesiden.</div></div>
+        <label class="kontakt"><input type="checkbox" name="tilmelding_aaben"><span class="kontakt-spor" aria-hidden="true"></span><span class="skjult-visuelt">Tilmelding er åben</span></label>
+      </div>
+      <div class="kontakt-raekke">
+        <div><strong>Levering til pladsen</strong>
+          <div class="hjaelp">Når den er slået fra, skal alle ordrer hentes ved disken.</div></div>
+        <label class="kontakt"><input type="checkbox" name="levering_aktiv"><span class="kontakt-spor" aria-hidden="true"></span><span class="skjult-visuelt">Levering til pladsen</span></label>
+      </div>
+      <label class="felt"><span>Levering fra (kr.)</span>
+        <input name="levering_min" inputmode="decimal" placeholder="100">
+        <div class="hjaelp">Mindste ordrebeløb før kunden kan vælge "bring til min plads". Skriv 0 for altid.</div></label>
+      <label class="felt"><span>MobilePay-nummer</span>
+        <input name="mobilepay_nr" inputmode="numeric" maxlength="20" placeholder="fx 12345">
+        <div class="hjaelp">Vises på kundens "Sæt penge ind"-side. Lad stå tomt, hvis I ikke bruger MobilePay.</div></label>
+      <p class="fejl-tekst" role="alert"></p>
+      <button class="knap primaer stor" type="submit">Gem indstillinger</button>
+    </form>
+  </section>
+
+  <!-- Rapport -->
+  <section id="fane-rapport" class="fane-side" role="tabpanel" hidden>
+    <div class="side-hoved"><h2>Rapport</h2><button class="knap lille" id="rapport-opdater">Opdater</button></div>
+    <div id="rapport"></div>
+  </section>
+</main>
+
+<!-- Vare-dialog -->
+<dialog class="boks" id="vare-dialog">
+  <form class="indhold" id="vare-form" method="dialog" novalidate>
+    <h2 id="vare-dialog-titel">Ny vare</h2>
+    <div class="billede-drop" id="billede-drop" tabindex="0" role="button" aria-label="Vælg billede">
+      <img id="billede-vis" alt="" hidden>
+      <span id="billede-tekst">Træk et billede hertil eller <u>vælg en fil</u><br><small>PNG, JPG, WebP, GIF eller SVG – maks 3 MB</small></span>
+      <input type="file" id="billede-fil" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml" hidden>
+    </div>
+    <label class="felt"><span>Navn</span><input name="navn" maxlength="60" required></label>
+    <label class="felt"><span>Beskrivelse</span><input name="beskrivelse" maxlength="140"></label>
+    <div class="to-felter">
+      <label class="felt"><span>Kategori</span><input name="kategori" list="kategorier" maxlength="40"></label>
+      <label class="felt"><span>Pris (kr.)</span><input name="pris" inputmode="decimal" placeholder="12,50" required></label>
+    </div>
+    <datalist id="kategorier"></datalist>
+    <div class="to-felter">
+      <label class="felt"><span>Sortering</span><input name="sortering" type="number" step="1" value="0">
+        <div class="hjaelp">Lavt tal står først.</div></label>
+      <div class="felt afkryds-gruppe">
+        <label class="afkryds"><input type="checkbox" name="aktiv" checked> Synlig for kunder</label>
+        <label class="afkryds"><input type="checkbox" name="udsolgt"> Udsolgt</label>
+      </div>
+    </div>
+    <p class="fejl-tekst" role="alert"></p>
+    <div class="knapper">
+      <button class="knap" type="button" value="fortryd">Fortryd</button>
+      <button class="knap primaer" type="submit">Gem</button>
+    </div>
+  </form>
+</dialog>
+
+<script type="module" src="/admin/admin.js"></script>
+</body>
+</html>
