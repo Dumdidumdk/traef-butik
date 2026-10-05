@@ -37,8 +37,9 @@ function tilfoejKunde(deltagerId, req, res) {
   res.on('error', ryd);
 }
 
-function tilfoejButik(req, res) {
+function tilfoejButik(req, res, personaleId = null) {
   aabn(req, res);
+  res.personaleId = personaleId;
   butik.add(res);
   const ryd = () => butik.delete(res);
   res.on('close', ryd);
@@ -66,6 +67,16 @@ function tilButik(event, data) {
   for (const res of butik) skriv(res, t);
 }
 
+// Luk butiksforbindelser for en spærret medarbejder
+function lukPersonale(personaleId) {
+  for (const res of [...butik]) {
+    if (res.personaleId === personaleId) {
+      butik.delete(res);
+      res.end();
+    }
+  }
+}
+
 function startPing(ms = 20000) {
   if (pingTimer) return;
   pingTimer = setInterval(() => {
@@ -90,4 +101,4 @@ function antal() {
   return { kunder: k, butik: butik.size };
 }
 
-module.exports = { tilfoejKunde, tilfoejButik, sendEn, tilKunde, tilAlleKunder, tilButik, startPing, lukAlle, antal };
+module.exports = { tilfoejKunde, tilfoejButik, lukPersonale, sendEn, tilKunde, tilAlleKunder, tilButik, startPing, lukAlle, antal };

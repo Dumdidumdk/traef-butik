@@ -29,7 +29,8 @@ CREATE TABLE IF NOT EXISTS varer (
   aktiv INTEGER NOT NULL DEFAULT 1,
   udsolgt INTEGER NOT NULL DEFAULT 0,
   sortering INTEGER NOT NULL DEFAULT 0,
-  oprettet TEXT NOT NULL
+  oprettet TEXT NOT NULL,
+  katalog_id TEXT
 );
 CREATE TABLE IF NOT EXISTS ordrer (
   id INTEGER PRIMARY KEY,
@@ -95,7 +96,36 @@ CREATE TABLE IF NOT EXISTS indstillinger (
   noegle TEXT PRIMARY KEY,
   vaerdi TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS personale (
+  id INTEGER PRIMARY KEY,
+  navn TEXT NOT NULL UNIQUE COLLATE NOCASE,
+  rolle TEXT NOT NULL CHECK (rolle IN ('admin','ekspedient')),
+  kode_salt TEXT NOT NULL,
+  kode_hash TEXT NOT NULL,
+  aktiv INTEGER NOT NULL DEFAULT 1,
+  oprettet TEXT NOT NULL,
+  sidst_logget_ind TEXT
+);
+CREATE TABLE IF NOT EXISTS ordre_haendelser (
+  id INTEGER PRIMARY KEY,
+  ordre_id INTEGER NOT NULL REFERENCES ordrer(id),
+  status TEXT NOT NULL,
+  personale_id INTEGER,
+  deltager_id INTEGER,
+  tid TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ordre_haendelser_ordre ON ordre_haendelser(ordre_id);
+CREATE INDEX IF NOT EXISTS ordre_haendelser_personale ON ordre_haendelser(personale_id);
 `;
+
+// Kolonner tilføjet i tillæg 3 (tilføjes til både nye og gamle databaser)
+const NYE_KOLONNER = [
+  ['sessioner', 'personale_id', 'INTEGER'],
+  ['indbetalinger', 'behandlet_af', 'INTEGER'],
+  ['udbetalinger', 'udfoert_af', 'INTEGER'],
+  ['saldo_bevaegelser', 'personale_id', 'INTEGER'],
+  ['deltagere', 'oprettet_af', 'INTEGER'],
+];
 
 // Indstillinger med type og standardværdi (personale_kode håndteres for sig)
 const INDSTILLINGER = {
@@ -107,23 +137,59 @@ const INDSTILLINGER = {
   mobilepay_nr: { type: 'tekst', std: '', min: 0, max: 40 },
 };
 
-// Navn, beskrivelse, kategori, pris i øre, billedfil
-const STANDARDVARER = [
-  ['Coca-Cola 0,5 l', 'Iskold klassiker', 'Drikke', 2000, 'coca-cola.svg'],
-  ['Coca-Cola Zero 0,5 l', 'Uden sukker', 'Drikke', 2000, 'coca-cola-zero.svg'],
-  ['Fanta 0,5 l', 'Appelsinsodavand', 'Drikke', 2000, 'fanta.svg'],
-  ['Faxe Kondi 0,5 l', 'Citron-lime sodavand', 'Drikke', 2000, 'faxe-kondi.svg'],
-  ['Monster Energy', 'Energidrik 0,5 l', 'Energi', 2500, 'monster.svg'],
-  ['Red Bull', 'Energidrik 0,25 l', 'Energi', 2500, 'red-bull.svg'],
-  ['Vand', 'Kildevand 0,5 l', 'Drikke', 1000, 'vand.svg'],
-  ['Kaffe', 'Sort kaffe', 'Drikke', 1000, 'kaffe.svg'],
-  ['Toast med skinke og ost', 'Varm toast', 'Mad', 2500, 'toast-skinke-ost.svg'],
-  ['Toast med ost', 'Varm toast', 'Mad', 2000, 'toast-ost.svg'],
-  ['Pose vingummi', 'Blandede vingummier', 'Slik og snacks', 1500, 'vingummi.svg'],
-  ['Chips', 'Pose chips', 'Slik og snacks', 2000, 'chips.svg'],
-  ['Snickers', 'Chokoladebar', 'Slik og snacks', 1200, 'snickers.svg'],
-  ['Pizza-slice', 'Varm pizza', 'Mad', 3000, 'pizza.svg'],
-];
+// Faste kategorier i visningsrækkefølge (tillæg 2)
+const KATEGORIER = ['Drikke', 'Energi', 'Varme drikke', 'Mad', 'Morgenmad', 'Slik og snacks', 'Frugt og sundt', 'Udstyr'];
+
+const BILLED_EXT = /\.(svg|png|jpe?g|webp|gif)$/i;
+
+// Læs alle katalog*.json i alfabetisk rækkefølge. Ugyldige poster springes over med en advarsel.
+function laesKatalog(stdDir) {
+  const ud = [];
+  const set = new Set();
+  if (!fs.existsSync(stdDir)) return ud;
+  // Sortér på navnet uden .json, så katalog.json kommer før katalog-2.json
+  const uden = (f) => f.replace(/\.json$/i, '').toLowerCase();
+  const filer = fs.readdirSync(stdDir).filter((f) => /^katalog.*\.json$/i.test(f))
+    .sort((a, b) => (uden(a) < uden(b) ? -1 : uden(a) > uden(b) ? 1 : 0));
+  for (const f of filer) {
+    let liste;
+    try {
+      liste = JSON.parse(fs.readFileSync(path.join(stdDir, f), 'utf8').replace(/^﻿/, ''));
+    } catch (e) {
+      console.warn(`  Advarsel: ${f} kunne ikke læses (${e.message})`);
+      continue;
+    }
+    if (!Array.isArray(liste)) {
+      console.warn(`  Advarsel: ${f} er ikke en liste`);
+      continue;
+    }
+    for (const v of liste) {
+      const ok = v && typeof v.katalog_id === 'string' && /^[a-z0-9-]{1,60}$/.test(v.katalog_id)
+        && typeof v.navn === 'string' && v.navn.trim() && v.navn.length <= 60
+        && Number.isSafeInteger(v.pris_oere) && v.pris_oere >= 0;
+      if (!ok) {
+        console.warn(`  Advarsel: ugyldig vare i ${f}: ${JSON.stringify(v).slice(0, 80)}`);
+        continue;
+      }
+      if (set.has(v.katalog_id)) {
+        console.warn(`  Advarsel: katalog_id "${v.katalog_id}" findes flere gange – første bruges`);
+        continue;
+      }
+      set.add(v.katalog_id);
+      ud.push({
+        katalog_id: v.katalog_id,
+        navn: v.navn.trim(),
+        beskrivelse: typeof v.beskrivelse === 'string' ? v.beskrivelse.slice(0, 300) : '',
+        kategori: typeof v.kategori === 'string' ? v.kategori.slice(0, 40) : '',
+        pris_oere: v.pris_oere,
+        billede: typeof v.billede === 'string' && BILLED_EXT.test(v.billede) && !/[\\/]/.test(v.billede) ? v.billede : null,
+        aktiv: v.standard_aktiv === true ? 1 : 0,
+        sortering: Number.isSafeInteger(v.sortering) ? v.sortering : null,
+      });
+    }
+  }
+  return ud;
+}
 
 function init(dataDir, projektDir) {
   const billedDir = path.join(dataDir, 'billeder');
@@ -134,25 +200,73 @@ function init(dataDir, projektDir) {
   db.exec(SKEMA);
 
   const tid = nu();
+
+  // Tillæg 3: nye kolonner + personale_kode → admin-konto "Admin"
+  tx(() => {
+    for (const [tabel, kol, type] of NYE_KOLONNER) {
+      if (!db.prepare(`PRAGMA table_info(${tabel})`).all().some((k) => k.name === kol)) {
+        db.exec(`ALTER TABLE ${tabel} ADD COLUMN ${kol} ${type}`);
+      }
+    }
+    const gammel = db.prepare("SELECT vaerdi FROM indstillinger WHERE noegle = 'personale_kode'").get();
+    if (gammel) {
+      const [salt, hash] = gammel.vaerdi.split(':');
+      if (salt && hash && !db.prepare("SELECT 1 FROM personale WHERE navn = 'Admin'").get()) {
+        db.prepare("INSERT INTO personale (navn, rolle, kode_salt, kode_hash, aktiv, oprettet) VALUES ('Admin', 'admin', ?, ?, 1, ?)")
+          .run(salt, hash, tid);
+      }
+      db.prepare("DELETE FROM indstillinger WHERE noegle = 'personale_kode'").run();
+    }
+    // Gamle personale-sessioner uden konto udløber
+    db.prepare("DELETE FROM sessioner WHERE type = 'personale' AND personale_id IS NULL").run();
+  });
   const saetStd = db.prepare('INSERT OR IGNORE INTO indstillinger (noegle, vaerdi) VALUES (?, ?)');
   for (const [k, d] of Object.entries(INDSTILLINGER)) saetStd.run(k, d.std);
 
-  // Standardbilleder kopieres, hvis de mangler
+  // Kun billedfiler kopieres fra data/standard, hvis de mangler
   const stdDir = path.join(projektDir, 'data', 'standard');
   if (fs.existsSync(stdDir)) {
     for (const f of fs.readdirSync(stdDir)) {
+      if (!BILLED_EXT.test(f)) continue;
       const maal = path.join(billedDir, f);
       if (!fs.existsSync(maal)) fs.copyFileSync(path.join(stdDir, f), maal);
     }
   }
 
-  // Standardvarer kun når tabellen er tom (første start)
-  if (db.prepare('SELECT COUNT(*) AS n FROM varer').get().n === 0) {
-    const ind = db.prepare(
-      'INSERT INTO varer (navn, beskrivelse, kategori, pris_oere, billede, aktiv, udsolgt, sortering, oprettet) VALUES (?, ?, ?, ?, ?, 1, 0, ?, ?)'
-    );
-    tx(() => STANDARDVARER.forEach(([n, b, k, p, f], i) => ind.run(n, b, k, p, f, (i + 1) * 10, tid)));
-  }
+  const katalog = laesKatalog(stdDir);
+
+  // Migration fra før tillæg 2: kolonnen katalog_id + match af standardvarer på navn (ellers billede)
+  const harKolonne = db.prepare('PRAGMA table_info(varer)').all().some((k) => k.name === 'katalog_id');
+  tx(() => {
+    if (!harKolonne) {
+      db.exec('ALTER TABLE varer ADD COLUMN katalog_id TEXT');
+      const fri = db.prepare('SELECT id FROM varer WHERE katalog_id IS NULL AND navn = ? ORDER BY id LIMIT 1');
+      const friB = db.prepare('SELECT id FROM varer WHERE katalog_id IS NULL AND billede = ? ORDER BY id LIMIT 1');
+      const saet = db.prepare('UPDATE varer SET katalog_id = ? WHERE id = ?');
+      const umatchede = [];
+      for (const k of katalog) {
+        const r = fri.get(k.navn);
+        if (r) saet.run(k.katalog_id, r.id);
+        else umatchede.push(k);
+      }
+      for (const k of umatchede) {
+        const r = k.billede && friB.get(k.billede);
+        if (r) saet.run(k.katalog_id, r.id);
+      }
+    }
+    db.exec('CREATE UNIQUE INDEX IF NOT EXISTS varer_katalog_id ON varer(katalog_id)');
+
+    // Opret katalogvarer, der mangler. Eksisterende varer røres aldrig.
+    const findes = db.prepare('SELECT 1 FROM varer WHERE katalog_id = ?');
+    const ind = db.prepare(`INSERT INTO varer (navn, beskrivelse, kategori, pris_oere, billede, aktiv, udsolgt, sortering, oprettet, katalog_id)
+      VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?)`);
+    const maks = db.prepare('SELECT COALESCE(MAX(sortering), 0) AS m FROM varer');
+    for (const k of katalog) {
+      if (findes.get(k.katalog_id)) continue;
+      const sort = k.sortering ?? maks.get().m + 10;
+      ind.run(k.navn, k.beskrivelse, k.kategori, k.pris_oere, k.billede, k.aktiv, sort, tid, k.katalog_id);
+    }
+  });
 
   // Ryd gamle sessioner
   const graense = new Date(Date.now() - 30 * 24 * 3600e3).toISOString();
@@ -213,4 +327,4 @@ function luk() {
   cache.clear();
 }
 
-module.exports = { init, q, tx, hentIndstilling, saetIndstilling, indstillinger, INDSTILLINGER, luk };
+module.exports = { init, q, tx, hentIndstilling, saetIndstilling, indstillinger, INDSTILLINGER, KATEGORIER, luk };
