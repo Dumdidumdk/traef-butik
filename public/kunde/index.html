@@ -91,7 +91,11 @@
         <div id="lukket-banner" class="banner banner-advarsel" role="status" hidden>
           <strong>Butikken er lukket lige nu.</strong> Du kan se varerne, men ikke bestille.
         </div>
-        <nav class="kategori-knapper" id="kategori-knapper" aria-label="Kategorier"></nav>
+        <nav class="kategori-bjaelke" id="kategori-bjaelke" aria-label="Kategorier">
+          <button type="button" class="kat-pil kat-pil-venstre" data-retning="-1" tabindex="-1" aria-hidden="true">‹</button>
+          <div class="kategori-knapper" id="kategori-knapper"></div>
+          <button type="button" class="kat-pil kat-pil-hoejre" data-retning="1" tabindex="-1" aria-hidden="true">›</button>
+        </nav>
         <div id="vare-liste"></div>
       </main>
 

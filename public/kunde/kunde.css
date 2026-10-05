@@ -164,15 +164,21 @@ legend { font-weight: 650; padding: 0; margin-bottom: 8px; }
 .banner { padding: 14px 16px; border-radius: var(--radius); margin-bottom: 14px; font-size: 1.05rem; }
 .banner-advarsel { background: rgba(255, 210, 63, .12); border: 2px solid var(--gul); color: #ffe68a; }
 
-.kategori-knapper {
+/* Kategorier: ombrydes på computer, scroller vandret med fade og pile på mobil */
+.kategori-bjaelke {
   position: sticky; top: calc(var(--top-hoejde) + 2px); z-index: 10;
-  display: flex; gap: 8px; overflow-x: auto; padding: 8px 0 10px; margin-bottom: 4px;
-  background: linear-gradient(var(--bg) 75%, transparent);
-  scrollbar-width: thin;
+  padding: 8px 0 10px; margin-bottom: 4px;
+  background: linear-gradient(var(--bg) calc(100% - 10px), transparent);
 }
-.kategori-knapper .knap { white-space: nowrap; border-radius: 999px; flex: none; }
+.kategori-knapper { display: flex; flex-wrap: wrap; gap: 6px; }
+.kategori-knapper .knap {
+  white-space: nowrap; border-radius: 999px; flex: none;
+  min-height: 40px; padding: 6px 11px; font-size: .9rem;
+}
+.kategori-knapper .knap[aria-current=true] { border-color: var(--magenta); background: rgba(255, 61, 190, .15); color: #fff; }
+.kat-pil { display: none; }
 
-.kategori { scroll-margin-top: calc(var(--top-hoejde) + 70px); margin-bottom: 22px; }
+.kategori { scroll-margin-top: calc(var(--top-hoejde) + var(--kat-hoejde, 60px) + 8px); margin-bottom: 22px; }
 .kategori h2 { font-size: 1.3rem; margin: 6px 0 12px; color: var(--magenta); text-shadow: 0 0 12px rgba(255, 61, 190, .4); }
 
 .gitter { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; }
@@ -383,7 +389,28 @@ legend { font-weight: 650; padding: 0; margin-bottom: 8px; }
   .top-knapper .knap { padding: 8px 10px; }
   .aktive-ordrer { padding: 10px 16px 0; }
   .butik-layout { grid-template-columns: minmax(0, 1fr); padding: 12px 16px 120px; }
-  .kategori-knapper { top: 0; }
+  .kategori-bjaelke { top: 0; }
+  .kategori-knapper {
+    flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; scroll-behavior: smooth;
+    scroll-padding-inline: 40px;
+  }
+  .kategori-knapper::-webkit-scrollbar { display: none; }
+  .kategori-bjaelke.mere-venstre .kategori-knapper { -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 56px); mask-image: linear-gradient(90deg, transparent 0, #000 56px); }
+  .kategori-bjaelke.mere-hoejre .kategori-knapper { -webkit-mask-image: linear-gradient(270deg, transparent 0, #000 56px); mask-image: linear-gradient(270deg, transparent 0, #000 56px); }
+  .kategori-bjaelke.mere-venstre.mere-hoejre .kategori-knapper {
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 56px, #000 calc(100% - 56px), transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0, #000 56px, #000 calc(100% - 56px), transparent 100%);
+  }
+  .kat-pil {
+    position: absolute; top: 8px; z-index: 1; width: 40px; height: 40px; padding: 0;
+    border: 2px solid var(--cyan); border-radius: 50%; background: var(--flade2); color: var(--cyan);
+    font-size: 1.6rem; line-height: 1; font-weight: 800; cursor: pointer;
+    box-shadow: 0 0 14px rgba(34, 230, 255, .35);
+  }
+  .kat-pil-venstre { left: 0; }
+  .kat-pil-hoejre { right: 0; }
+  .kategori-bjaelke.mere-venstre .kat-pil-venstre,
+  .kategori-bjaelke.mere-hoejre .kat-pil-hoejre { display: grid; place-items: center; }
   .gitter { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
 
   .kurv {

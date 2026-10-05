@@ -234,6 +234,9 @@ async function hentVarer(liste) {
   visKurv();
 }
 
+// Fast rækkefølge (tillæg 2); egne kategorier kommer bagefter i den rækkefølge, de optræder
+const KATEGORI_ORDEN = ['Drikke', 'Energi', 'Varme drikke', 'Mad', 'Morgenmad', 'Slik og snacks', 'Frugt og sundt', 'Udstyr'];
+
 function kategorier() {
   const grupper = new Map();
   for (const v of tilstand.varer) {
@@ -241,7 +244,8 @@ function kategorier() {
     if (!grupper.has(k)) grupper.set(k, []);
     grupper.get(k).push(v);
   }
-  return grupper;
+  const orden = k => { const i = KATEGORI_ORDEN.indexOf(k); return i < 0 ? KATEGORI_ORDEN.length : i; };
+  return new Map([...grupper].sort((a, b) => orden(a[0]) - orden(b[0])));
 }
 
 function kategoriId(navn) { return 'kat-' + navn.toLowerCase().replace(/[^a-z0-9æøå]+/g, '-'); }
@@ -250,13 +254,17 @@ function visVarer() {
   const grupper = kategorier();
   const knapper = $('#kategori-knapper');
   knapper.innerHTML = '';
-  knapper.hidden = grupper.size < 2;
+  $('#kategori-bjaelke').hidden = grupper.size < 2;
   for (const k of grupper.keys()) {
     const b = document.createElement('button');
     b.type = 'button';
     b.className = 'knap';
+    b.dataset.kat = kategoriId(k);
     b.textContent = k;
     b.addEventListener('click', () => {
+      // Den valgte kategori markeres, også hvis siden ikke kan scrolle helt derned
+      valgtKat = { id: kategoriId(k), til: Date.now() + 1500 };
+      markerAktivKategori();
       const mål = document.getElementById(kategoriId(k));
       if (mål) { mål.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
     });
@@ -279,6 +287,69 @@ function visVarer() {
     for (const v of varer) gitter.append(vareKort(v));
     liste.append(sek);
   }
+  opdaterKategoriBjaelke();
+  markerAktivKategori();
+}
+
+// ---------- Kategoribjælke: fade/pile når den kan scrolles, og markering af aktiv kategori ----------
+function opdaterKategoriBjaelke() {
+  const bj = $('#kategori-bjaelke');
+  const k = $('#kategori-knapper');
+  const rest = k.scrollWidth - k.clientWidth - k.scrollLeft;
+  bj.classList.toggle('mere-venstre', k.scrollLeft > 4);
+  bj.classList.toggle('mere-hoejre', rest > 4);
+  document.documentElement.style.setProperty('--kat-hoejde', (bj.hidden ? 0 : bj.offsetHeight) + 'px');
+}
+
+let aktivKat = null;
+let valgtKat = null;
+function markerAktivKategori() {
+  const bj = $('#kategori-bjaelke');
+  if (bj.hidden) return;
+  const sektioner = $$('#vare-liste .kategori');
+  let aktiv = null;
+  if (valgtKat && Date.now() < valgtKat.til) {
+    aktiv = valgtKat.id;
+  } else if (sektioner.length && innerHeight + scrollY >= document.documentElement.scrollHeight - 2 && scrollY > 0) {
+    // Helt i bunden: de sidste korte kategorier kan ikke nå op under bjælken
+    aktiv = (valgtKat && valgtKat.id) || sektioner[sektioner.length - 1].id;
+  } else {
+    valgtKat = null;
+    const graense = bj.getBoundingClientRect().bottom + 20;
+    for (const s of sektioner) {
+      if (s.getBoundingClientRect().top <= graense) aktiv = s.id; else break;
+    }
+  }
+  aktiv = aktiv || (sektioner[0] || {}).id;
+  if (aktiv === aktivKat && $(`#kategori-knapper [aria-current="true"]`)) return;
+  aktivKat = aktiv;
+  const k = $('#kategori-knapper');
+  for (const b of $$('button', k)) {
+    const er = b.dataset.kat === aktiv;
+    b.setAttribute('aria-current', er ? 'true' : 'false');
+    // Hold den aktive kategori synlig i den vandrette række (kun mobil)
+    if (er && k.scrollWidth > k.clientWidth) {
+      const venstre = b.offsetLeft - k.offsetLeft;
+      if (venstre < k.scrollLeft + 40 || venstre + b.offsetWidth > k.scrollLeft + k.clientWidth - 40) {
+        k.scrollLeft = venstre - (k.clientWidth - b.offsetWidth) / 2;
+      }
+    }
+  }
+}
+
+function initKategoriBjaelke() {
+  const k = $('#kategori-knapper');
+  k.addEventListener('scroll', opdaterKategoriBjaelke, { passive: true });
+  window.addEventListener('resize', () => { opdaterKategoriBjaelke(); markerAktivKategori(); });
+  $$('.kat-pil').forEach(p => p.addEventListener('click', () => {
+    k.scrollBy({ left: +p.dataset.retning * k.clientWidth * 0.7 });
+  }));
+  let venter = false;
+  window.addEventListener('scroll', () => {
+    if (venter) return;
+    venter = true;
+    requestAnimationFrame(() => { venter = false; markerAktivKategori(); });
+  }, { passive: true });
 }
 
 function vareKort(v) {
@@ -909,6 +980,7 @@ async function hentInfo() {
 async function start() {
   initLogin();
   initKurv();
+  initKategoriBjaelke();
   initNotif();
   initPenge();
   initDialoger();
