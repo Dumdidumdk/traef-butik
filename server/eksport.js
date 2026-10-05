@@ -94,6 +94,12 @@ function byg(nuTid = new Date()) {
     raekker: [...timer.keys()].sort().map((k) => [timer.get(k).tekst, timer.get(k).antal, kr(timer.get(k).beloeb)]),
   };
 
+  // Hvem leverede/annullerede (sidste afsluttende hændelse pr. ordre)
+  const udfoertAf = new Map();
+  for (const h of q(`SELECT h.ordre_id, COALESCE(p.navn, CASE WHEN h.deltager_id IS NOT NULL THEN 'Kunden' ELSE 'System' END) AS af
+    FROM ordre_haendelser h LEFT JOIN personale p ON p.id = h.personale_id
+    WHERE h.status IN ('leveret', 'annulleret') ORDER BY h.id`).all()) udfoertAf.set(h.ordre_id, h.af);
+
   // 4. Ordrer
   const ordreArk = {
     navn: 'Ordrer',
@@ -101,11 +107,12 @@ function byg(nuTid = new Date()) {
       { titel: 'Ordrenr', bredde: 10, stil: 'heltal' }, { titel: 'Tidspunkt', bredde: 17, stil: 'dato' },
       { titel: 'PC', bredde: 7, stil: 'heltal' }, { titel: 'Navn', bredde: 22 }, { titel: 'Levering', bredde: 16 },
       { titel: 'Status', bredde: 12 }, { titel: 'Varer', bredde: 50 }, { titel: 'Note', bredde: 28 },
-      { titel: 'Total', bredde: 14, stil: 'kr' },
+      { titel: 'Total', bredde: 14, stil: 'kr' }, { titel: 'Udført af', bredde: 16 },
     ],
     raekker: ordrer.map((o) => [
       o.id, dato(o.oprettet), o.pc_nr, o.navn, LEVERING[o.levering] || o.levering, STATUS[o.status] || o.status,
       (linjerPr.get(o.id) || []).map((l) => `${l.antal} × ${l.navn}`).join(', '), o.note, kr(o.total_oere),
+      udfoertAf.get(o.id) || '',
     ]),
   };
 
@@ -127,27 +134,30 @@ function byg(nuTid = new Date()) {
   };
 
   // 6. Indbetalinger
-  const indb = q(`SELECT i.*, d.pc_nr, d.navn FROM indbetalinger i JOIN deltagere d ON d.id = i.deltager_id ORDER BY i.id`).all();
+  const indb = q(`SELECT i.*, d.pc_nr, d.navn, p.navn AS af FROM indbetalinger i JOIN deltagere d ON d.id = i.deltager_id
+    LEFT JOIN personale p ON p.id = i.behandlet_af ORDER BY i.id`).all();
   const indbArk = {
     navn: 'Indbetalinger',
     kolonner: [
       { titel: 'Tidspunkt', bredde: 17, stil: 'dato' }, { titel: 'PC', bredde: 7, stil: 'heltal' }, { titel: 'Navn', bredde: 22 },
       { titel: 'Beløb', bredde: 14, stil: 'kr' }, { titel: 'Metode', bredde: 12 }, { titel: 'Reference', bredde: 28 },
-      { titel: 'Status', bredde: 12 },
+      { titel: 'Status', bredde: 12 }, { titel: 'Godkendt af', bredde: 16 },
     ],
     raekker: indb.map((i) => [dato(i.oprettet), i.pc_nr, i.navn, kr(i.beloeb_oere), METODE[i.metode] || i.metode,
-      i.reference, INDB_STATUS[i.status] || i.status]),
+      i.reference, INDB_STATUS[i.status] || i.status, i.af || '']),
   };
 
   // 7. Udbetalinger
-  const udb = q(`SELECT u.*, d.pc_nr, d.navn FROM udbetalinger u JOIN deltagere d ON d.id = u.deltager_id ORDER BY u.id`).all();
+  const udb = q(`SELECT u.*, d.pc_nr, d.navn, p.navn AS af FROM udbetalinger u JOIN deltagere d ON d.id = u.deltager_id
+    LEFT JOIN personale p ON p.id = u.udfoert_af ORDER BY u.id`).all();
   const udbArk = {
     navn: 'Udbetalinger',
     kolonner: [
       { titel: 'Tidspunkt', bredde: 17, stil: 'dato' }, { titel: 'PC', bredde: 7, stil: 'heltal' }, { titel: 'Navn', bredde: 22 },
       { titel: 'Beløb', bredde: 14, stil: 'kr' }, { titel: 'Metode', bredde: 12 }, { titel: 'Reference', bredde: 32 },
+      { titel: 'Udført af', bredde: 16 },
     ],
-    raekker: udb.map((u) => [dato(u.oprettet), u.pc_nr, u.navn, kr(u.beloeb_oere), METODE[u.metode] || u.metode, u.reference]),
+    raekker: udb.map((u) => [dato(u.oprettet), u.pc_nr, u.navn, kr(u.beloeb_oere), METODE[u.metode] || u.metode, u.reference, u.af || '']),
   };
 
   // 8. Deltagere
@@ -165,7 +175,28 @@ function byg(nuTid = new Date()) {
     raekker: delt.map((d) => [d.pc_nr, d.navn, kr(d.indbetalt), kr(d.brugt), kr(d.udbetalt), kr(d.saldo_oere)]),
   };
 
-  return arbejdsbog([oversigt, salgVare, salgTime, ordreArk, linjeArk, indbArk, udbArk, deltArk]);
+  // 9. Personale (tillæg 3)
+  const pers = q(`SELECT p.navn, p.rolle,
+      (SELECT COUNT(DISTINCT ordre_id) FROM ordre_haendelser WHERE personale_id = p.id AND status = 'klar') AS klar,
+      (SELECT COUNT(DISTINCT ordre_id) FROM ordre_haendelser WHERE personale_id = p.id AND status = 'leveret') AS leveret,
+      (SELECT COUNT(DISTINCT ordre_id) FROM ordre_haendelser WHERE personale_id = p.id AND status = 'annulleret') AS annulleret,
+      (SELECT COUNT(*) FROM indbetalinger WHERE behandlet_af = p.id AND status = 'godkendt') AS indb_antal,
+      (SELECT COALESCE(SUM(beloeb_oere), 0) FROM indbetalinger WHERE behandlet_af = p.id AND status = 'godkendt') AS indb_beloeb,
+      (SELECT COUNT(*) FROM deltagere WHERE oprettet_af = p.id) AS checkin
+    FROM personale p ORDER BY p.navn COLLATE NOCASE`).all();
+  const persArk = {
+    navn: 'Personale',
+    kolonner: [
+      { titel: 'Navn', bredde: 20 }, { titel: 'Rolle', bredde: 12 },
+      { titel: 'Ordrer flyttet til klar', bredde: 14, stil: 'heltal' }, { titel: 'Ordrer leveret', bredde: 14, stil: 'heltal' },
+      { titel: 'Ordrer annulleret', bredde: 14, stil: 'heltal' }, { titel: 'Indbetalinger godkendt', bredde: 14, stil: 'heltal' },
+      { titel: 'Indbetalinger godkendt (beløb)', bredde: 16, stil: 'kr' }, { titel: 'Deltagere checket ind', bredde: 14, stil: 'heltal' },
+    ],
+    raekker: pers.map((p) => [p.navn, p.rolle === 'admin' ? 'Admin' : 'Ekspedient', p.klar, p.leveret, p.annulleret,
+      p.indb_antal, kr(p.indb_beloeb), p.checkin]),
+  };
+
+  return arbejdsbog([oversigt, salgVare, salgTime, ordreArk, linjeArk, indbArk, udbArk, deltArk, persArk]);
 }
 
 // Filnavn: <traef-navn>-salg-<YYYY-MM-DD>.xlsx (ASCII-udgave + UTF-8-udgave)

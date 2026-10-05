@@ -96,7 +96,36 @@ CREATE TABLE IF NOT EXISTS indstillinger (
   noegle TEXT PRIMARY KEY,
   vaerdi TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS personale (
+  id INTEGER PRIMARY KEY,
+  navn TEXT NOT NULL UNIQUE COLLATE NOCASE,
+  rolle TEXT NOT NULL CHECK (rolle IN ('admin','ekspedient')),
+  kode_salt TEXT NOT NULL,
+  kode_hash TEXT NOT NULL,
+  aktiv INTEGER NOT NULL DEFAULT 1,
+  oprettet TEXT NOT NULL,
+  sidst_logget_ind TEXT
+);
+CREATE TABLE IF NOT EXISTS ordre_haendelser (
+  id INTEGER PRIMARY KEY,
+  ordre_id INTEGER NOT NULL REFERENCES ordrer(id),
+  status TEXT NOT NULL,
+  personale_id INTEGER,
+  deltager_id INTEGER,
+  tid TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ordre_haendelser_ordre ON ordre_haendelser(ordre_id);
+CREATE INDEX IF NOT EXISTS ordre_haendelser_personale ON ordre_haendelser(personale_id);
 `;
+
+// Kolonner tilføjet i tillæg 3 (tilføjes til både nye og gamle databaser)
+const NYE_KOLONNER = [
+  ['sessioner', 'personale_id', 'INTEGER'],
+  ['indbetalinger', 'behandlet_af', 'INTEGER'],
+  ['udbetalinger', 'udfoert_af', 'INTEGER'],
+  ['saldo_bevaegelser', 'personale_id', 'INTEGER'],
+  ['deltagere', 'oprettet_af', 'INTEGER'],
+];
 
 // Indstillinger med type og standardværdi (personale_kode håndteres for sig)
 const INDSTILLINGER = {
@@ -171,6 +200,26 @@ function init(dataDir, projektDir) {
   db.exec(SKEMA);
 
   const tid = nu();
+
+  // Tillæg 3: nye kolonner + personale_kode → admin-konto "Admin"
+  tx(() => {
+    for (const [tabel, kol, type] of NYE_KOLONNER) {
+      if (!db.prepare(`PRAGMA table_info(${tabel})`).all().some((k) => k.name === kol)) {
+        db.exec(`ALTER TABLE ${tabel} ADD COLUMN ${kol} ${type}`);
+      }
+    }
+    const gammel = db.prepare("SELECT vaerdi FROM indstillinger WHERE noegle = 'personale_kode'").get();
+    if (gammel) {
+      const [salt, hash] = gammel.vaerdi.split(':');
+      if (salt && hash && !db.prepare("SELECT 1 FROM personale WHERE navn = 'Admin'").get()) {
+        db.prepare("INSERT INTO personale (navn, rolle, kode_salt, kode_hash, aktiv, oprettet) VALUES ('Admin', 'admin', ?, ?, 1, ?)")
+          .run(salt, hash, tid);
+      }
+      db.prepare("DELETE FROM indstillinger WHERE noegle = 'personale_kode'").run();
+    }
+    // Gamle personale-sessioner uden konto udløber
+    db.prepare("DELETE FROM sessioner WHERE type = 'personale' AND personale_id IS NULL").run();
+  });
   const saetStd = db.prepare('INSERT OR IGNORE INTO indstillinger (noegle, vaerdi) VALUES (?, ?)');
   for (const [k, d] of Object.entries(INDSTILLINGER)) saetStd.run(k, d.std);
 

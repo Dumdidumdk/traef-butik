@@ -37,8 +37,18 @@ const vareObj = (r) => ({
 
 const ORDRE_SQL = `SELECT o.*, d.pc_nr, d.navn,
   (SELECT json_group_array(json_object('vare_id', l.vare_id, 'navn', l.navn, 'pris_oere', l.pris_oere, 'antal', l.antal))
-     FROM ordrelinjer l WHERE l.ordre_id = o.id) AS linjer_json
+     FROM ordrelinjer l WHERE l.ordre_id = o.id) AS linjer_json,
+  (SELECT json_group_array(json_object('status', x.status, 'af', x.af, 'tid', x.tid)) FROM (
+     SELECT h.status, h.tid, COALESCE(p.navn, CASE WHEN h.deltager_id IS NOT NULL THEN 'Kunden' ELSE 'System' END) AS af
+     FROM ordre_haendelser h LEFT JOIN personale p ON p.id = h.personale_id WHERE h.ordre_id = o.id ORDER BY h.id) x
+  ) AS haendelser_json
   FROM ordrer o JOIN deltagere d ON d.id = o.deltager_id`;
+
+// Log en statusændring (kaldes inde i tx)
+function logHaendelse(ordreId, status, { personaleId = null, deltagerId = null } = {}) {
+  q('INSERT INTO ordre_haendelser (ordre_id, status, personale_id, deltager_id, tid) VALUES (?, ?, ?, ?, ?)')
+    .run(ordreId, status, personaleId, deltagerId, nu());
+}
 
 const ordreObj = (r) => ({
   id: r.id,
@@ -52,6 +62,7 @@ const ordreObj = (r) => ({
   oprettet: r.oprettet,
   opdateret: r.opdateret,
   linjer: JSON.parse(r.linjer_json || '[]'),
+  haendelser: JSON.parse(r.haendelser_json || '[]'),
 });
 
 const hentOrdre = (id) => {
@@ -59,7 +70,8 @@ const hentOrdre = (id) => {
   return r ? ordreObj(r) : null;
 };
 
-const INDB_SQL = `SELECT i.*, d.pc_nr, d.navn FROM indbetalinger i JOIN deltagere d ON d.id = i.deltager_id`;
+const INDB_SQL = `SELECT i.*, d.pc_nr, d.navn, p.navn AS behandlet_af_navn FROM indbetalinger i
+  JOIN deltagere d ON d.id = i.deltager_id LEFT JOIN personale p ON p.id = i.behandlet_af`;
 
 const indbObj = (r) => ({
   id: r.id,
@@ -71,6 +83,7 @@ const indbObj = (r) => ({
   status: r.status,
   oprettet: r.oprettet,
   behandlet: r.behandlet,
+  behandlet_af: r.behandlet_af_navn ?? null,
 });
 
 const hentIndb = (id) => {
@@ -84,22 +97,24 @@ const hentDeltager = (id) => q('SELECT * FROM deltagere WHERE id = ?').get(id);
 let kundeUrl = '';
 
 function info() {
-  return { ...D.indstillinger(), personale_opsat: !!D.hentIndstilling('personale_kode'), kunde_url: kundeUrl };
+  return { ...D.indstillinger(), personale_opsat: harAktivAdmin(), kunde_url: kundeUrl };
 }
+
+const harAktivAdmin = () => !!q("SELECT 1 FROM personale WHERE rolle = 'admin' AND aktiv = 1 LIMIT 1").get();
 
 const aktiveVarer = () =>
   q('SELECT * FROM varer WHERE aktiv = 1 ORDER BY sortering, navn').all().map(vareObj);
 
 // ---------- Saldo (altid sammen med en bevægelse; kaldes inde i tx) ----------
 
-function aendrSaldo(deltagerId, beloeb, type, { ordreId = null, indbId = null, tekst: t = '' } = {}) {
+function aendrSaldo(deltagerId, beloeb, type, { ordreId = null, indbId = null, tekst: t = '', personaleId = null } = {}) {
   const r = q('UPDATE deltagere SET saldo_oere = saldo_oere + ? WHERE id = ? AND saldo_oere + ? >= 0')
     .run(beloeb, deltagerId, beloeb);
   if (r.changes === 0) {
     throw fejl(409, 'ikke_nok_penge', 'Der er ikke penge nok på kontoen.');
   }
-  q(`INSERT INTO saldo_bevaegelser (deltager_id, beloeb_oere, type, ordre_id, indbetaling_id, tekst, oprettet)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`).run(deltagerId, beloeb, type, ordreId, indbId, t, nu());
+  q(`INSERT INTO saldo_bevaegelser (deltager_id, beloeb_oere, type, ordre_id, indbetaling_id, tekst, oprettet, personale_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).run(deltagerId, beloeb, type, ordreId, indbId, t, nu(), personaleId);
 }
 
 function sendSaldo(deltagerId) {
@@ -133,15 +148,25 @@ function kraevKunde(req) {
   return d;
 }
 
+// Returnerer { id, navn, rolle } for den indloggede (aktive) medarbejder
 function kraevPersonale(req) {
-  if (!hentSession(req, 'personale')) throw fejl(401, 'ikke_logget_ind', 'Personalet er ikke logget ind.');
+  const s = hentSession(req, 'personale');
+  const p = s && s.personale_id && q('SELECT id, navn, rolle FROM personale WHERE id = ? AND aktiv = 1').get(s.personale_id);
+  if (!p) throw fejl(401, 'ikke_logget_ind', 'Du er ikke logget ind som personale.');
+  return { id: p.id, navn: p.navn, rolle: p.rolle };
 }
 
-function nySession(type, deltagerId) {
+function kraevAdmin(req) {
+  const p = kraevPersonale(req);
+  if (p.rolle !== 'admin') throw fejl(403, 'kraever_admin', 'Det kræver admin-rettigheder.');
+  return p;
+}
+
+function nySession(type, deltagerId, personaleId = null) {
   const token = nytToken();
   const t = nu();
-  q('INSERT INTO sessioner (token, type, deltager_id, oprettet, sidst_brugt) VALUES (?, ?, ?, ?, ?)')
-    .run(token, type, deltagerId, t, t);
+  q('INSERT INTO sessioner (token, type, deltager_id, oprettet, sidst_brugt, personale_id) VALUES (?, ?, ?, ?, ?, ?)')
+    .run(token, type, deltagerId, t, t, personaleId);
   return saetCookie(type, token);
 }
 
@@ -204,7 +229,7 @@ async function kundeTilmeld(req, res) {
 }
 
 // Opret deltager; evt. startbeløb som godkendt indbetaling – alt i én transaktion
-async function opretDeltager(pc, navn, pin, start = 0, metode = 'mobilepay') {
+async function opretDeltager(pc, navn, pin, start = 0, metode = 'mobilepay', personaleId = null) {
   const optaget = () => fejl(409, 'pc_optaget', `PC-nummer ${pc} er allerede tilmeldt.`);
   if (q('SELECT 1 FROM deltagere WHERE pc_nr = ?').get(pc)) throw optaget();
   const h = await hash(pin);
@@ -212,13 +237,13 @@ async function opretDeltager(pc, navn, pin, start = 0, metode = 'mobilepay') {
   try {
     id = tx(() => {
       const t = nu();
-      const r = q('INSERT INTO deltagere (pc_nr, navn, pin_salt, pin_hash, saldo_oere, oprettet) VALUES (?, ?, ?, ?, 0, ?)')
-        .run(pc, navn, h.salt, h.hash, t);
+      const r = q('INSERT INTO deltagere (pc_nr, navn, pin_salt, pin_hash, saldo_oere, oprettet, oprettet_af) VALUES (?, ?, ?, ?, 0, ?, ?)')
+        .run(pc, navn, h.salt, h.hash, t, personaleId);
       const did = Number(r.lastInsertRowid);
       if (start > 0) {
-        const ir = q("INSERT INTO indbetalinger (deltager_id, beloeb_oere, metode, reference, status, oprettet, behandlet) VALUES (?, ?, ?, ?, 'godkendt', ?, ?)")
-          .run(did, start, metode, 'Startbeløb ved check-in', t, t);
-        aendrSaldo(did, start, 'indbetaling', { indbId: Number(ir.lastInsertRowid), tekst: `Startbeløb (${metode})` });
+        const ir = q(`INSERT INTO indbetalinger (deltager_id, beloeb_oere, metode, reference, status, oprettet, behandlet, behandlet_af)
+          VALUES (?, ?, ?, ?, 'godkendt', ?, ?, ?)`).run(did, start, metode, 'Startbeløb ved check-in', t, t, personaleId);
+        aendrSaldo(did, start, 'indbetaling', { indbId: Number(ir.lastInsertRowid), tekst: `Startbeløb (${metode})`, personaleId });
       }
       return did;
     });
@@ -319,6 +344,7 @@ async function kundeNyOrdre(req, res) {
     for (const l of linjer) indL.run(id, ...l);
     // Betinget opdatering – fejler hvis saldoen er brugt i mellemtiden
     aendrSaldo(d.id, -total, 'koeb', { ordreId: id, tekst: `Ordre #${id}` });
+    logHaendelse(id, 'ny', { deltagerId: d.id });
     return id;
   });
 
@@ -348,13 +374,14 @@ function kundeAnnuller(req, res, p) {
   if (o.status !== 'ny') {
     throw fejl(409, 'kan_ikke_annulleres', 'Ordren kan ikke annulleres, fordi butikken allerede er i gang med den.');
   }
-  skiftStatus(id, 'annulleret', ['ny']);
+  skiftStatus(id, 'annulleret', ['ny'], { deltagerId: d.id });
   efterStatus(id);
   sendJson(res, 200, hentOrdre(id));
 }
 
 // Skift status i én transaktion; refunder ved annullering
-function skiftStatus(id, ny, tilladteFra) {
+// af: { personaleId } eller { deltagerId } – logges i ordre_haendelser
+function skiftStatus(id, ny, tilladteFra, af = {}) {
   tx(() => {
     const o = q('SELECT * FROM ordrer WHERE id = ?').get(id);
     if (!o) throw fejl(404, 'ordre_findes_ikke', 'Ordren findes ikke.');
@@ -362,8 +389,11 @@ function skiftStatus(id, ny, tilladteFra) {
       throw fejl(409, 'ugyldigt_skift', `Ordren kan ikke skifte fra "${o.status}" til "${ny}".`);
     }
     q('UPDATE ordrer SET status = ?, opdateret = ? WHERE id = ?').run(ny, nu(), id);
+    logHaendelse(id, ny, af);
     if (ny === 'annulleret' && o.total_oere > 0) {
-      aendrSaldo(o.deltager_id, o.total_oere, 'refusion', { ordreId: id, tekst: `Refusion for annulleret ordre #${id}` });
+      aendrSaldo(o.deltager_id, o.total_oere, 'refusion', {
+        ordreId: id, tekst: `Refusion for annulleret ordre #${id}`, personaleId: af.personaleId ?? null,
+      });
     }
   });
 }
@@ -409,31 +439,61 @@ function kundeStream(req, res) {
 
 // ---------- Personale ----------
 
+// ---------- Personale: konti og login (tillæg 3) ----------
+
+const pNavnV = (v) => tekst(v, 1, 40, 'ugyldigt_navn', 'Navnet skal være 1–40 tegn.');
+const kodeV = (v) => tekst(v, 6, 100, 'ugyldig_kode', 'Koden skal være mindst 6 tegn.');
+function rolleV(v) {
+  if (v !== 'admin' && v !== 'ekspedient') throw fejl(400, 'ugyldig_rolle', 'Rollen skal være admin eller ekspedient.');
+  return v;
+}
+const personaleObj = (r) => ({
+  id: r.id, navn: r.navn, rolle: r.rolle, aktiv: !!r.aktiv, oprettet: r.oprettet, sidst_logget_ind: r.sidst_logget_ind,
+});
+const navnOptaget = (navn) => fejl(409, 'navn_optaget', `Der findes allerede en medarbejder med navnet "${navn}".`);
+
+function indsaetPersonale(navn, rolle, h) {
+  try {
+    const r = q('INSERT INTO personale (navn, rolle, kode_salt, kode_hash, aktiv, oprettet) VALUES (?, ?, ?, ?, 1, ?)')
+      .run(navn, rolle, h.salt, h.hash, nu());
+    return Number(r.lastInsertRowid);
+  } catch (e) {
+    if (/UNIQUE/.test(e.message)) throw navnOptaget(navn);
+    throw e;
+  }
+}
+
 async function personaleOpsaet(req, res) {
   const k = await laesJson(req);
-  if (D.hentIndstilling('personale_kode')) throw fejl(409, 'allerede_opsat', 'Personalekoden er allerede sat.');
-  const kode = tekst(k.kode, 6, 100, 'ugyldig_kode', 'Koden skal være mindst 6 tegn.');
+  const ingen = () => !q('SELECT 1 FROM personale LIMIT 1').get();
+  if (!ingen()) throw fejl(409, 'allerede_opsat', 'Der er allerede oprettet personale. Log ind i stedet.');
+  // Uden navn (gamle klienter) hedder kontoen "Admin" – som ved migrationen
+  const navn = k.navn === undefined || k.navn === null || k.navn === '' ? 'Admin' : pNavnV(k.navn);
+  const kode = kodeV(k.kode);
   const h = await hash(kode);
   // Tjek igen efter hashing (to samtidige opsætninger)
-  if (D.hentIndstilling('personale_kode')) throw fejl(409, 'allerede_opsat', 'Personalekoden er allerede sat.');
-  D.saetIndstilling('personale_kode', `${h.salt}:${h.hash}`);
+  if (!ingen()) throw fejl(409, 'allerede_opsat', 'Der er allerede oprettet personale. Log ind i stedet.');
+  const id = indsaetPersonale(navn, 'admin', h);
+  q('UPDATE personale SET sidst_logget_ind = ? WHERE id = ?').run(nu(), id);
   sse.tilAlleKunder('info', info());
-  sendJson(res, 200, { ok: true }, { 'Set-Cookie': nySession('personale', null) });
+  sendJson(res, 200, { id, navn, rolle: 'admin' }, { 'Set-Cookie': nySession('personale', null, id) });
 }
 
 async function personaleLogin(req, res) {
   const k = await laesJson(req);
-  const gemt = D.hentIndstilling('personale_kode');
-  if (!gemt) throw fejl(409, 'ikke_opsat', 'Personalekoden er ikke sat endnu. Åbn /admin for at sætte den.');
-  const noegle = 'personale:' + (req.socket.remoteAddress || '');
+  const navn = k.navn === undefined || k.navn === null ? 'Admin' : typeof k.navn === 'string' ? k.navn.trim().slice(0, 40) : '';
+  const noegle = 'personale:' + navn.toLowerCase();
   tjekGraense(noegle);
-  const [salt, h] = gemt.split(':');
-  const ok = typeof k.kode === 'string' && k.kode.length <= 200 && (await tjekHash(k.kode, salt, h));
-  if (!ok) {
+  const p = navn ? q('SELECT * FROM personale WHERE navn = ?').get(navn) : null;
+  const kode = typeof k.kode === 'string' && k.kode.length <= 200 ? k.kode : '';
+  const ok = await tjekHash(kode, p ? p.kode_salt : DUMMY_SALT, p ? p.kode_hash : DUMMY_HASH);
+  // Samme svar uanset om navnet findes, eller kontoen er spærret
+  if (!p || !ok || !kode || !p.aktiv) {
     forkertForsoeg(noegle);
-    throw fejl(401, 'forkert_login', 'Forkert personalekode.');
+    throw fejl(401, 'forkert_login', 'Forkert navn eller kode.');
   }
-  sendJson(res, 200, { ok: true }, { 'Set-Cookie': nySession('personale', null) });
+  q('UPDATE personale SET sidst_logget_ind = ? WHERE id = ?').run(nu(), p.id);
+  sendJson(res, 200, { id: p.id, navn: p.navn, rolle: p.rolle }, { 'Set-Cookie': nySession('personale', null, p.id) });
 }
 
 function personaleLogout(req, res) {
@@ -442,8 +502,52 @@ function personaleLogout(req, res) {
 }
 
 function personaleMig(req, res) {
-  kraevPersonale(req);
-  sendJson(res, 200, { ok: true });
+  sendJson(res, 200, kraevPersonale(req));
+}
+
+function adminPersonale(req, res) {
+  kraevAdmin(req);
+  sendJson(res, 200, q('SELECT * FROM personale ORDER BY navn COLLATE NOCASE').all().map(personaleObj));
+}
+
+async function adminNytPersonale(req, res) {
+  kraevAdmin(req);
+  const k = await laesJson(req);
+  const navn = pNavnV(k.navn);
+  const rolle = rolleV(k.rolle);
+  const kode = kodeV(k.kode);
+  if (q('SELECT 1 FROM personale WHERE navn = ?').get(navn)) throw navnOptaget(navn);
+  const id = indsaetPersonale(navn, rolle, await hash(kode));
+  sendJson(res, 200, personaleObj(q('SELECT * FROM personale WHERE id = ?').get(id)));
+}
+
+async function adminRetPersonale(req, res, p) {
+  kraevAdmin(req);
+  const id = idV(p.id, 'personale_findes_ikke', 'Medarbejderen findes ikke.');
+  const k = await laesJson(req);
+  const f = {};
+  if (k.navn !== undefined) f.navn = pNavnV(k.navn);
+  if (k.rolle !== undefined) f.rolle = rolleV(k.rolle);
+  if (k.aktiv !== undefined) f.aktiv = bool(k.aktiv, 'ugyldig_vaerdi', 'aktiv skal være sand/falsk.') ? 1 : 0;
+  const kode = k.kode !== undefined && k.kode !== null && k.kode !== '' ? kodeV(k.kode) : null;
+  const h = kode ? await hash(kode) : null;
+  tx(() => {
+    const m = q('SELECT * FROM personale WHERE id = ?').get(id);
+    if (!m) throw fejl(404, 'personale_findes_ikke', 'Medarbejderen findes ikke.');
+    // Den sidste aktive admin må ikke spærres eller nedgraderes
+    const mister = m.rolle === 'admin' && m.aktiv && ((f.rolle && f.rolle !== 'admin') || f.aktiv === 0);
+    if (mister && !q("SELECT 1 FROM personale WHERE rolle = 'admin' AND aktiv = 1 AND id <> ?").get(id)) {
+      throw fejl(409, 'sidste_admin', 'Der skal være mindst én aktiv admin.');
+    }
+    if (f.navn !== undefined && q('SELECT 1 FROM personale WHERE navn = ? AND id <> ?').get(f.navn, id)) throw navnOptaget(f.navn);
+    const n = Object.keys(f);
+    if (n.length) q(`UPDATE personale SET ${n.map((x) => `${x} = ?`).join(', ')} WHERE id = ?`).run(...n.map((x) => f[x]), id);
+    if (h) q('UPDATE personale SET kode_salt = ?, kode_hash = ? WHERE id = ?').run(h.salt, h.hash, id);
+    // Spærring logger ud med det samme
+    if (f.aktiv === 0) q("DELETE FROM sessioner WHERE type = 'personale' AND personale_id = ?").run(id);
+  });
+  if (f.aktiv === 0) sse.lukPersonale(id);
+  sendJson(res, 200, personaleObj(q('SELECT * FROM personale WHERE id = ?').get(id)));
 }
 
 const AKTIVE = ['ny', 'laves', 'klar'];
@@ -479,17 +583,33 @@ const SKIFT = {
 };
 
 async function butikStatus(req, res, p) {
-  kraevPersonale(req);
+  const pers = kraevPersonale(req);
   const id = idV(p.id, 'ordre_findes_ikke', 'Ordren findes ikke.');
   const k = await laesJson(req);
   if (!ALLE_STATUS.includes(k.status)) throw fejl(400, 'ugyldig_status', 'Ukendt status.');
-  skiftStatus(id, k.status, SKIFT[k.status]);
+  skiftStatus(id, k.status, SKIFT[k.status], { personaleId: pers.id });
   sendJson(res, 200, efterStatus(id));
 }
 
 function butikStream(req, res) {
+  const pers = kraevPersonale(req);
+  sse.tilfoejButik(req, res, pers.id);
+}
+
+// Udsolgt-listen på butiksskærmen (ekspedienter må)
+function butikVarer(req, res) {
   kraevPersonale(req);
-  sse.tilfoejButik(req, res);
+  sendJson(res, 200, aktiveVarer());
+}
+
+async function butikUdsolgt(req, res, p) {
+  kraevPersonale(req);
+  const v = findVare(p.id);
+  const k = await laesJson(req);
+  const u = bool(k.udsolgt, 'ugyldig_vaerdi', 'udsolgt skal være sand/falsk.') ? 1 : 0;
+  q('UPDATE varer SET udsolgt = ? WHERE id = ?').run(u, v.id);
+  sendVarer();
+  sendJson(res, 200, vareObj(q('SELECT * FROM varer WHERE id = ?').get(v.id)));
 }
 
 // ---------- Admin: varer ----------
@@ -509,12 +629,12 @@ function vareFelter(k, ny) {
 const sendVarer = () => sse.tilAlleKunder('varer', aktiveVarer());
 
 function adminVarer(req, res) {
-  kraevPersonale(req);
+  kraevAdmin(req);
   sendJson(res, 200, q('SELECT * FROM varer ORDER BY sortering, navn').all().map(vareObj));
 }
 
 async function adminNyVare(req, res) {
-  kraevPersonale(req);
+  kraevAdmin(req);
   const f = vareFelter(await laesJson(req), true);
   const sort = f.sortering ?? (q('SELECT COALESCE(MAX(sortering), 0) AS m FROM varer').get().m + 10);
   const r = q('INSERT INTO varer (navn, beskrivelse, kategori, pris_oere, billede, aktiv, udsolgt, sortering, oprettet) VALUES (?, ?, ?, ?, NULL, ?, ?, ?, ?)')
@@ -525,7 +645,7 @@ async function adminNyVare(req, res) {
 
 // Sæt "sælges" for mange varer på én gang (tillæg 2)
 async function adminVarerAktiv(req, res) {
-  kraevPersonale(req);
+  kraevAdmin(req);
   const k = await laesJson(req);
   const besked = 'ids skal være en liste af vare-id\'er.';
   if (!Array.isArray(k.ids) || k.ids.length > 5000) throw fejl(400, 'ugyldige_ids', besked);
@@ -541,7 +661,7 @@ async function adminVarerAktiv(req, res) {
 }
 
 function adminKategorier(req, res) {
-  kraevPersonale(req);
+  kraevAdmin(req);
   const egne = q("SELECT DISTINCT kategori FROM varer WHERE kategori <> ''").all()
     .map((r) => r.kategori)
     .filter((k) => !D.KATEGORIER.includes(k))
@@ -557,7 +677,7 @@ function findVare(idTekst) {
 }
 
 async function adminRetVare(req, res, p) {
-  kraevPersonale(req);
+  kraevAdmin(req);
   const v = findVare(p.id);
   const f = vareFelter(await laesJson(req), false);
   const n = Object.keys(f);
@@ -569,7 +689,7 @@ async function adminRetVare(req, res, p) {
 }
 
 function adminSletVare(req, res, p) {
-  kraevPersonale(req);
+  kraevAdmin(req);
   const v = findVare(p.id);
   q('UPDATE varer SET aktiv = 0 WHERE id = ?').run(v.id);
   sendVarer();
@@ -600,7 +720,7 @@ function tjekBilledIndhold(ext, b) {
 }
 
 async function adminVareBillede(req, res, p) {
-  kraevPersonale(req);
+  kraevAdmin(req);
   const v = findVare(p.id);
   const type = String(req.headers['content-type'] || '').split(';')[0].trim().toLowerCase();
   const ext = BILLEDTYPER[type];
@@ -637,7 +757,7 @@ function adminDeltagere(req, res, p, url) {
 }
 
 async function adminNyDeltager(req, res) {
-  kraevPersonale(req);
+  const pers = kraevPersonale(req);
   const k = await laesJson(req);
   const pc = pcNr(k.pc_nr);
   const navn = navnV(k.navn);
@@ -646,7 +766,7 @@ async function adminNyDeltager(req, res) {
     ? 0
     : heltal(k.startbeloeb_oere, 0, 1000000, 'ugyldigt_beloeb', 'Startbeløbet skal være mellem 0 og 10.000 kr.');
   const metode = metodeV(k.metode);
-  const d = await opretDeltager(pc, navn, pin, start, metode);
+  const d = await opretDeltager(pc, navn, pin, start, metode, pers.id);
   if (start > 0) sse.tilButik('indbetaling', hentIndb(q('SELECT MAX(id) AS id FROM indbetalinger WHERE deltager_id = ?').get(d.id).id));
   // PIN i klartekst returneres kun her og ved nulstilling
   sendJson(res, 200, { ...deltagerObj(d), pin });
@@ -681,15 +801,15 @@ async function adminRetDeltager(req, res, p) {
 // ---------- Admin: udbetaling af restsaldo (tillæg 1) ----------
 
 function adminUdbetalinger(req, res) {
-  kraevPersonale(req);
+  kraevAdmin(req);
   const mangler = q('SELECT * FROM deltagere WHERE saldo_oere > 0 ORDER BY pc_nr').all().map(deltagerObj);
-  const udbetalt = q(`SELECT u.id, d.pc_nr, d.navn, u.beloeb_oere, u.metode, u.reference, u.oprettet
-    FROM udbetalinger u JOIN deltagere d ON d.id = u.deltager_id ORDER BY u.id DESC`).all();
+  const udbetalt = q(`SELECT u.id, d.pc_nr, d.navn, u.beloeb_oere, u.metode, u.reference, u.oprettet, p.navn AS udfoert_af
+    FROM udbetalinger u JOIN deltagere d ON d.id = u.deltager_id LEFT JOIN personale p ON p.id = u.udfoert_af ORDER BY u.id DESC`).all();
   sendJson(res, 200, { mangler, udbetalt });
 }
 
 async function adminUdbetal(req, res, p) {
-  kraevPersonale(req);
+  const pers = kraevAdmin(req);
   const d = findDeltager(p.id);
   const k = await laesJson(req);
   const metode = metodeV(k.metode);
@@ -698,24 +818,26 @@ async function adminUdbetal(req, res, p) {
     const saldo = hentDeltager(d.id).saldo_oere;
     if (saldo <= 0) throw fejl(409, 'ingen_saldo', 'Der er ingen penge at udbetale.');
     const t = nu();
-    const r = q('INSERT INTO udbetalinger (deltager_id, beloeb_oere, metode, reference, oprettet) VALUES (?, ?, ?, ?, ?)')
-      .run(d.id, saldo, metode, ref, t);
-    aendrSaldo(d.id, -saldo, 'udbetaling', { tekst: `Udbetaling af restsaldo (${metode})${ref ? ': ' + ref : ''}` });
-    return { id: Number(r.lastInsertRowid), pc_nr: d.pc_nr, navn: d.navn, beloeb_oere: saldo, metode, reference: ref, oprettet: t };
+    const r = q('INSERT INTO udbetalinger (deltager_id, beloeb_oere, metode, reference, oprettet, udfoert_af) VALUES (?, ?, ?, ?, ?, ?)')
+      .run(d.id, saldo, metode, ref, t, pers.id);
+    aendrSaldo(d.id, -saldo, 'udbetaling', { tekst: `Udbetaling af restsaldo (${metode})${ref ? ': ' + ref : ''}`, personaleId: pers.id });
+    return {
+      id: Number(r.lastInsertRowid), pc_nr: d.pc_nr, navn: d.navn, beloeb_oere: saldo, metode, reference: ref, oprettet: t, udfoert_af: pers.navn,
+    };
   });
   sendSaldo(d.id);
   sendJson(res, 200, u);
 }
 
 async function adminSaldo(req, res, p) {
-  kraevPersonale(req);
+  const pers = kraevAdmin(req);
   const d = findDeltager(p.id);
   const k = await laesJson(req);
   const beloeb = heltal(k.beloeb_oere, -10000000, 10000000, 'ugyldigt_beloeb', 'Beløbet skal være et helt antal øre.');
   if (beloeb === 0) throw fejl(400, 'ugyldigt_beloeb', 'Beløbet må ikke være 0.');
   const t = tekst(k.tekst, 0, 200, 'ugyldig_tekst', 'Teksten må højst være 200 tegn.') || 'Manuel justering';
   try {
-    tx(() => aendrSaldo(d.id, beloeb, 'justering', { tekst: t }));
+    tx(() => aendrSaldo(d.id, beloeb, 'justering', { tekst: t, personaleId: pers.id }));
   } catch (e) {
     if (e instanceof Fejl && e.kode === 'ikke_nok_penge') {
       throw fejl(409, 'ikke_nok_penge', 'Saldoen kan ikke blive negativ.');
@@ -729,8 +851,10 @@ async function adminSaldo(req, res, p) {
 function adminBevaegelser(req, res, p) {
   kraevPersonale(req);
   const d = findDeltager(p.id);
-  sendJson(res, 200, q(`SELECT id, beloeb_oere, type, ordre_id, indbetaling_id, tekst, oprettet
-    FROM saldo_bevaegelser WHERE deltager_id = ? ORDER BY id DESC`).all(d.id));
+  // af: personalets navn, ellers Kunden (køb/egen annullering) eller System
+  sendJson(res, 200, q(`SELECT b.id, b.beloeb_oere, b.type, b.ordre_id, b.indbetaling_id, b.tekst, b.oprettet,
+      COALESCE(p.navn, CASE WHEN b.type IN ('koeb', 'refusion') THEN 'Kunden' ELSE 'System' END) AS af
+    FROM saldo_bevaegelser b LEFT JOIN personale p ON p.id = b.personale_id WHERE b.deltager_id = ? ORDER BY b.id DESC`).all(d.id));
 }
 
 // ---------- Admin: indbetalinger ----------
@@ -752,15 +876,15 @@ function adminIndbetalinger(req, res, p, url) {
 
 function behandlIndb(godkend) {
   return (req, res, p) => {
-    kraevPersonale(req);
+    const pers = kraevPersonale(req);
     const id = idV(p.id, 'indbetaling_findes_ikke', 'Indbetalingen findes ikke.');
     const deltagerId = tx(() => {
       const i = q('SELECT * FROM indbetalinger WHERE id = ?').get(id);
       if (!i) throw fejl(404, 'indbetaling_findes_ikke', 'Indbetalingen findes ikke.');
       if (i.status !== 'afventer') throw fejl(409, 'allerede_behandlet', 'Indbetalingen er allerede behandlet.');
-      q('UPDATE indbetalinger SET status = ?, behandlet = ? WHERE id = ?').run(godkend ? 'godkendt' : 'afvist', nu(), id);
+      q('UPDATE indbetalinger SET status = ?, behandlet = ?, behandlet_af = ? WHERE id = ?').run(godkend ? 'godkendt' : 'afvist', nu(), pers.id, id);
       if (godkend) {
-        aendrSaldo(i.deltager_id, i.beloeb_oere, 'indbetaling', { indbId: id, tekst: `Indbetaling (${i.metode})` });
+        aendrSaldo(i.deltager_id, i.beloeb_oere, 'indbetaling', { indbId: id, tekst: `Indbetaling (${i.metode})`, personaleId: pers.id });
       }
       return i.deltager_id;
     });
@@ -775,12 +899,12 @@ function behandlIndb(godkend) {
 // ---------- Admin: indstillinger og rapport ----------
 
 function adminIndstillinger(req, res) {
-  kraevPersonale(req);
+  kraevAdmin(req);
   sendJson(res, 200, D.indstillinger());
 }
 
 async function adminRetIndstillinger(req, res) {
-  kraevPersonale(req);
+  kraevAdmin(req);
   const k = await laesJson(req);
   const nye = {};
   for (const [n, v] of Object.entries(k)) {
@@ -798,7 +922,7 @@ async function adminRetIndstillinger(req, res) {
 }
 
 function adminRapport(req, res) {
-  kraevPersonale(req);
+  kraevAdmin(req);
   const o = q("SELECT COALESCE(SUM(total_oere), 0) AS s, COUNT(*) AS n FROM ordrer WHERE status <> 'annulleret'").get();
   const pr = q(`SELECT l.navn, SUM(l.antal) AS antal, SUM(l.antal * l.pris_oere) AS beloeb_oere
     FROM ordrelinjer l JOIN ordrer o ON o.id = l.ordre_id WHERE o.status <> 'annulleret'
@@ -837,16 +961,21 @@ const RUTER = [
   ['POST', '/api/personale/login', personaleLogin],
   ['POST', '/api/personale/logout', personaleLogout],
   ['GET', '/api/personale/mig', personaleMig],
+  ['GET', '/api/admin/personale', adminPersonale],
+  ['POST', '/api/admin/personale', adminNytPersonale],
+  ['PUT', '/api/admin/personale/:id', adminRetPersonale],
 
   ['GET', '/api/butik/ordrer', butikOrdrer],
   ['POST', '/api/butik/ordrer/:id/status', butikStatus],
   ['GET', '/api/butik/stream', butikStream],
+  ['GET', '/api/butik/varer', butikVarer],
+  ['POST', '/api/butik/varer/:id/udsolgt', butikUdsolgt],
 
   ['GET', '/api/admin/varer', adminVarer],
   ['POST', '/api/admin/varer', adminNyVare],
   ['POST', '/api/admin/varer/aktiv', adminVarerAktiv],
   ['GET', '/api/admin/kategorier', adminKategorier],
-  ['GET', '/api/admin/eksport.xlsx', (req, res) => { kraevPersonale(req); eksport.send(res); }],
+  ['GET', '/api/admin/eksport.xlsx', (req, res) => { kraevAdmin(req); eksport.send(res); }],
   ['PUT', '/api/admin/varer/:id', adminRetVare],
   ['DELETE', '/api/admin/varer/:id', adminSletVare],
   ['POST', '/api/admin/varer/:id/billede', adminVareBillede],
