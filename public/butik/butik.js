@@ -68,9 +68,17 @@ addEventListener('pointerdown', aktiverLyd, { capture: true });
 addEventListener('keydown', aktiverLyd, { capture: true });
 $('#lyd-aktiver').addEventListener('click', () => { aktiverLyd(); lydNyOrdre(); });
 
+// Knap med ikon + tekst; teksten skjules på smallere skærme, så title/aria-label bærer den
+function ikonKnap(k, ikon, tekst) {
+  k.querySelector('.ikon').textContent = ikon;
+  k.querySelector('.tekst').textContent = tekst;
+  k.title = tekst;
+  k.setAttribute('aria-label', tekst);
+}
+
 function visLydKnap() {
   const k = $('#lyd-knap');
-  k.textContent = lydTil ? '🔊 Lyd til' : '🔇 Lyd fra';
+  ikonKnap(k, lydTil ? '🔊' : '🔇', lydTil ? 'Lyd til' : 'Lyd fra');
   k.setAttribute('aria-pressed', String(lydTil));
   k.classList.toggle('aktiv', !lydTil);
   if (!lydTil) $('#lyd-advarsel').hidden = true;
@@ -381,8 +389,10 @@ async function hentVarer() {
 function tegnVarer() {
   // Grupperet efter kategori i den rækkefølge serveren sender
   const grupper = new Map();
+  const q = $('#udsolgt-soeg').value.trim().toLowerCase();
   for (const v of varer) {
     if (!sand(v.aktiv ?? 1)) continue;
+    if (q && !`${v.navn} ${v.kategori || ''}`.toLowerCase().includes(q)) continue;
     const k = v.kategori || 'Andet';
     if (!grupper.has(k)) grupper.set(k, []);
     grupper.get(k).push(v);
@@ -390,7 +400,7 @@ function tegnVarer() {
   $('#udsolgt-liste').innerHTML = [...grupper].map(([k, liste]) => `<h3 class="udsolgt-kat">${esc(k)}</h3>` + liste.map((v) => `
     <button class="knap vare-skift ${sand(v.udsolgt) ? 'udsolgt' : ''}" data-vare="${v.id}" aria-pressed="${sand(v.udsolgt)}">
       <span class="navn">${esc(v.navn)}</span><span class="tilstand">${sand(v.udsolgt) ? 'UDSOLGT' : 'På lager'}</span>
-    </button>`).join('')).join('') || '<p class="tom">Ingen varer sælges</p>';
+    </button>`).join('')).join('') || `<p class="tom">${q ? 'Ingen varer passer til søgningen' : 'Ingen varer sælges'}</p>`;
 }
 $('#udsolgt-liste').addEventListener('click', async (e) => {
   const knap = e.target.closest('[data-vare]');
@@ -410,15 +420,27 @@ $('#udsolgt-liste').addEventListener('click', async (e) => {
 });
 
 // ---------- Paneler ----------
+// Et åbent panel står til højre under topbjælken og skubber tavlen til side, så ingen kolonne skjules
 function aabnPanel(navn) {
+  let nogenAaben = false;
   for (const p of ['indbetalinger', 'udsolgt']) {
     const aaben = p === navn && $(`#${p}-panel`).hidden;
+    nogenAaben ||= aaben;
     $(`#${p}-panel`).hidden = !aaben;
     $(`#${p}-knap`).setAttribute('aria-expanded', String(aaben));
     $(`#${p}-knap`).classList.toggle('aktiv', aaben);
   }
-  if (navn === 'udsolgt' && !$('#udsolgt-panel').hidden) hentVarer();
+  document.body.classList.toggle('panel-aaben', nogenAaben);
+  if (navn === 'udsolgt' && !$('#udsolgt-panel').hidden) {
+    $('#udsolgt-soeg').value = '';
+    hentVarer();
+  }
 }
+// Panelet starter under topbjælken, uanset hvor høj den er
+new ResizeObserver(() => {
+  document.documentElement.style.setProperty('--top-h', `${$('.top').offsetHeight}px`);
+}).observe($('.top'));
+$('#udsolgt-soeg').addEventListener('input', tegnVarer);
 $('#indbetalinger-knap').addEventListener('click', () => aabnPanel('indbetalinger'));
 $('#udsolgt-knap').addEventListener('click', () => aabnPanel('udsolgt'));
 document.querySelectorAll('[data-luk]').forEach((k) => k.addEventListener('click', () => aabnPanel(null)));
@@ -444,7 +466,7 @@ try { storVisning = localStorage.getItem('butik-visning') === 'stor'; } catch { 
 function visVisning() {
   document.body.classList.toggle('stor', storVisning);
   const k = $('#visning-knap');
-  k.textContent = storVisning ? '▦ Kompakt visning' : '▤ Stor visning';
+  ikonKnap(k, storVisning ? '▦' : '▤', storVisning ? 'Kompakt visning' : 'Stor visning');
   k.setAttribute('aria-pressed', String(storVisning));
 }
 $('#visning-knap').addEventListener('click', () => {
@@ -461,9 +483,11 @@ fsKnap.addEventListener('click', () => {
   if (document.fullscreenElement) document.exitFullscreen();
   else document.documentElement.requestFullscreen().catch(() => besked('Fuldskærm er ikke tilladt her.', true));
 });
-document.addEventListener('fullscreenchange', () => {
-  fsKnap.textContent = document.fullscreenElement ? '⛶ Afslut fuldskærm' : '⛶ Fuldskærm';
-});
+function visFsKnap() {
+  ikonKnap(fsKnap, '⛶', document.fullscreenElement ? 'Afslut fuldskærm' : 'Fuldskærm');
+}
+document.addEventListener('fullscreenchange', visFsKnap);
+visFsKnap();
 
 // ---------- Hent alt (ved start og efter genforbindelse) ----------
 async function hentOrdrer() {

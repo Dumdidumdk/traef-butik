@@ -133,8 +133,9 @@ body { display: flex; flex-direction: column; overflow: hidden; }
 .status-maerke.annulleret { background: rgba(255,71,98,.15); color: var(--roed); }
 
 /* Sidepaneler */
+:root { --panel-b: 400px; }
 .panel {
-  position: fixed; top: 0; right: 0; bottom: 0; z-index: 60; width: min(440px, 100vw);
+  position: fixed; top: var(--top-h, 0px); right: 0; bottom: 0; z-index: 60; width: min(var(--panel-b), 100vw);
   display: flex; flex-direction: column; background: var(--flade); border-left: 2px solid var(--cyan);
   box-shadow: -10px 0 40px rgba(0,0,0,.7);
 }
@@ -166,18 +167,39 @@ body { display: flex; flex-direction: column; overflow: hidden; }
   .stor .linjer { font-size: 1.5rem; }
 }
 
-/* Mellembrede skærme: tre kolonner, Klar delt i to halvdele med hver sin scroll */
-@media (max-width: 1399px) and (min-width: 901px) {
+/* Kolonnerne følger tavlens egen bredde (den bliver smallere, når et panel er åbent) */
+.tavle-ramme { flex: 1; min-height: 0; display: flex; container-type: inline-size; }
+.tavle-ramme > .tavle { flex: 1; min-width: 0; }
+/* Mellembredt: tre kolonner, Klar delt i to halvdele med hver sin scroll */
+@container (max-width: 1350px) {
   .tavle {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
     grid-template-areas: "ny laves bord" "ny laves hent";
   }
 }
+/* Smalt (fx 1280 px med panel åbent): to kolonner, alle fire grupper ses stadig */
+@container (max-width: 1000px) {
+  .tavle {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas: "ny bord" "laves hent";
+  }
+  .kort { grid-template-columns: minmax(0, 1fr) auto 100px; }
+  .kort-pc { font-size: 2.1rem; }
+}
+
+/* Åbent panel skubber tavlen og "Seneste leverede" til side i stedet for at dække dem */
+@media (min-width: 901px) {
+  body.panel-aaben .tavle-ramme, body.panel-aaben .lyd-advarsel { margin-right: var(--panel-b); }
+  body.panel-aaben .seneste { margin-right: calc(var(--panel-b) + 16px); }
+}
 
 /* Smalle skærme: kolonner under hinanden, hele siden ruller */
 @media (max-width: 900px) {
   body { overflow: auto; height: auto; display: block; }
+  .tavle-ramme { display: block; }
+  .top-titel { flex-wrap: wrap; row-gap: 6px; }
   .tavle { display: flex; flex-direction: column; }
   .kort-liste { overflow: visible; }
   .top-vaerktoej { width: 100%; }
@@ -198,8 +220,37 @@ body { display: flex; flex-direction: column; overflow: hidden; }
   .seneste-raekke .nr, .seneste-raekke .tid { display: none; }
 }
 
-/* Bruger i topbjælken og kategorier i udsolgt-listen */
-.top-titel { flex-wrap: wrap; row-gap: 6px; }
+/* Bruger i topbjælken */
 .top-titel .bruger .knap { min-height: 36px; }
+.panel-soeg { display: block; margin: 10px 16px 0; }
+
+/* Fra 1280 px: hele topbjælken på én række. Titel, navn og søgefelt krymper; knapperne bliver ikoner */
+@media (min-width: 1280px) {
+  .top { flex-wrap: nowrap; }
+  .top-titel { flex: 0 1 auto; flex-wrap: nowrap; }
+  .top h1 { min-width: 0; font-size: 1.35rem; }
+  .top-vaerktoej { flex: 1 1 auto; flex-wrap: nowrap; justify-content: flex-end; min-width: 0; }
+  .top-vaerktoej > * { flex: 0 0 auto; }
+  .top-vaerktoej > .soeg { flex: 1 1 150px; min-width: 110px; max-width: 220px; }
+  .soeg input { width: 100%; }
+  .top .knap { white-space: nowrap; }
+}
+@media (min-width: 1280px) and (max-width: 1999px) {
+  .top .ikon-knap .tekst, .forbindelse .tekst, .bruger .forstavelse, .segment .lang { display: none; }
+  .top .ikon-knap { min-width: 40px; padding-left: .5em; padding-right: .5em; font-size: 1.05rem; }
+  .bruger-navn { max-width: 10em; }
+}
+@media (min-width: 1280px) and (max-width: 1439px) {
+  .bruger-navn { max-width: 7em; }
+  .top-titel { gap: 10px; }
+  .top-vaerktoej { gap: 6px; }
+}
 .udsolgt-kat { margin: 14px 0 6px; font-size: .9rem; text-transform: uppercase; letter-spacing: .06em; color: var(--cyan); }
 .udsolgt-kat:first-child { margin-top: 0; }
+
+/* Mobil: brugerbjælken som navn + rollemærke + ikoner */
+@media (max-width: 600px) {
+  .bruger .ikon-knap .tekst, .bruger .forstavelse { display: none; }
+  .bruger .ikon-knap { min-width: 38px; padding: 0 .45em; }
+  .bruger-navn { max-width: 9em; }
+}

@@ -25,10 +25,25 @@ function visFane() {
     fane.hidden = !maaSe(f);
     fane.setAttribute('aria-selected', String(f === navn));
   }
+  visAktivFane();
   ({ checkin: visCheckin, udbetaling: hentUdbetalinger, varer: hentVarer, deltagere: soegDeltagere, indbetalinger: hentIndbetalinger,
     indstillinger: hentIndstillinger, personale: hentPersonale, rapport: hentRapport })[navn]();
 }
 addEventListener('hashchange', visFane);
+
+// Fanerækken kan rulle vandret på smalle skærme: fade i den kant, hvor der er flere faner
+const fanerEl = $('.faner');
+function fanerKanter() {
+  const max = fanerEl.scrollWidth - fanerEl.clientWidth;
+  fanerEl.classList.toggle('kan-venstre', fanerEl.scrollLeft > 2);
+  fanerEl.classList.toggle('kan-hoejre', fanerEl.scrollLeft < max - 2);
+}
+fanerEl.addEventListener('scroll', fanerKanter, { passive: true });
+addEventListener('resize', fanerKanter);
+function visAktivFane() {
+  $('.fane[aria-selected="true"]')?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  fanerKanter();
+}
 
 // ================= VARER (katalog) =================
 let varer = [];
@@ -842,9 +857,20 @@ function tegnPersonale() {
       <td><span class="rolle ${esc(p.rolle)}">${esc(rolleNavn(p.rolle))}</span></td>
       <td class="status ${sand(p.aktiv) ? 'godkendt' : 'afvist'}">${sand(p.aktiv) ? 'Aktiv' : 'Spærret'}</td>
       <td>${p.sidst_logget_ind ? datoTid(p.sidst_logget_ind) : '–'}</td>
-      <td class="handlinger"><button class="knap lille" data-p="ret">Ret</button>
-        <button class="knap lille ${sand(p.aktiv) ? 'fare' : ''}" data-p="aktiv">${sand(p.aktiv) ? 'Spær' : 'Genaktivér'}</button></td>
+      <td class="handlinger"><button class="knap lille" data-p="ret">Ret</button>${spaerKnap(p)}</td>
     </tr>`).join('') || '<tr><td colspan="5" class="tom">Ingen medarbejdere.</td></tr>';
+}
+
+// Den sidste aktive admin kan ikke spærres eller gøres til ekspedient
+const SIDSTE_ADMIN = 'Der skal være mindst én aktiv admin. Gør en anden til admin først.';
+function erSidsteAdmin(p) {
+  return p.rolle === 'admin' && sand(p.aktiv) && personale.filter((x) => x.rolle === 'admin' && sand(x.aktiv)).length === 1;
+}
+function spaerKnap(p) {
+  if (p.id === mig.id) return ''; // man spærrer ikke sig selv
+  if (!sand(p.aktiv)) return '<button class="knap lille" data-p="aktiv">Genaktivér</button>';
+  if (erSidsteAdmin(p)) return `<button class="knap lille" data-p="aktiv" aria-disabled="true" title="${esc(SIDSTE_ADMIN)}">Spær</button>`;
+  return '<button class="knap lille fare" data-p="aktiv">Spær</button>';
 }
 
 function aabnPersonale(p) {
@@ -856,6 +882,13 @@ function aabnPersonale(p) {
   $('#kode-hjaelp').textContent = p ? 'Lad stå tomt for at beholde koden. Ellers mindst 6 tegn.' : 'Mindst 6 tegn.';
   persForm.navn.value = p?.navn || '';
   persForm.rolle.value = p?.rolle || 'ekspedient';
+  // Sidste aktive admin kan ikke gøres til ekspedient
+  const laast = !!p && erSidsteAdmin(p);
+  const eksp = persForm.querySelector('[name=rolle][value=ekspedient]');
+  eksp.disabled = laast;
+  eksp.closest('.valg').title = laast ? SIDSTE_ADMIN : '';
+  $('#rolle-hjaelp').textContent = laast ? SIDSTE_ADMIN : '';
+  $('#rolle-hjaelp').hidden = !laast;
   persDialog.showModal();
   persForm.navn.focus();
 }
@@ -897,6 +930,7 @@ $('#personale-tabel').addEventListener('click', async (e) => {
   const p = personale.find((x) => x.id === Number(knap.closest('tr').dataset.id));
   if (!p) return;
   if (knap.dataset.p === 'ret') return aabnPersonale(p);
+  if (knap.getAttribute('aria-disabled') === 'true') return besked(SIDSTE_ADMIN, true);
   const spaer = sand(p.aktiv);
   if (spaer && !(await bekraeft(`Spær ${p.navn}?`, `${p.navn} bliver logget ud med det samme og kan ikke logge ind, før kontoen genaktiveres.`, 'Spær'))) return;
   knap.disabled = true;

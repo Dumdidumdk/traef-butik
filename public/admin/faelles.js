@@ -202,11 +202,19 @@ async function hentMig() {
 
 export const rolleNavn = (r) => ({ admin: 'admin', ekspedient: 'ekspedient' }[r] || r || '');
 
+// Små streg-ikoner (tegnes ens på alle maskiner, i modsætning til emoji)
+const svg = (indhold) => `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${indhold}</svg>`;
+const IKON_SKIFT = svg('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><path d="M17 5h5m0 0-2-2m2 2-2 2M22 12h-5m0 0 2-2m-2 2 2 2"/>');
+const IKON_LOG_UD = svg('<path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/><path d="M10 16l-4-4 4-4M6 12h10"/>');
+
 // "Logget ind som Mads (ekspedient)" + Skift bruger + Log ud
 export function brugerBjaelke(mig, el) {
-  el.innerHTML = `<span class="bruger-navn">Logget ind som <strong>${esc(mig.navn)}</strong> (${esc(rolleNavn(mig.rolle))})</span>
-    <button class="knap lille" data-skift-bruger>Skift bruger</button>
-    <button class="knap lille" data-log-ud>Log ud</button>`;
+  // Navnet forkortes med ellipsis og rollen er et lille mærke; på smalle skærme vises knapperne kun som ikoner
+  const hele = `Logget ind som ${mig.navn} (${rolleNavn(mig.rolle)})`;
+  el.innerHTML = `<span class="bruger-navn" title="${esc(hele)}"><span class="forstavelse">Logget ind som </span><strong class="navn">${esc(mig.navn)}</strong></span>
+    <span class="rolle-maerke ${esc(mig.rolle)}">${esc(rolleNavn(mig.rolle))}</span>
+    <button class="knap lille ikon-knap" data-skift-bruger title="Skift bruger" aria-label="Skift bruger"><span class="ikon" aria-hidden="true">${IKON_SKIFT}</span><span class="tekst">Skift bruger</span></button>
+    <button class="knap lille ikon-knap" data-log-ud title="Log ud" aria-label="Log ud"><span class="ikon" aria-hidden="true">${IKON_LOG_UD}</span><span class="tekst">Log ud</span></button>`;
   el.querySelector('[data-skift-bruger]').addEventListener('click', () => logUd('Skift bruger: log ind med dit eget navn og din kode.'));
   el.querySelector('[data-log-ud]').addEventListener('click', () => logUd(`${mig.navn} er logget ud.`));
 }
