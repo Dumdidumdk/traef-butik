@@ -121,61 +121,70 @@ export function bekraeft(titel, tekst, jaTekst = 'Ja', fare = true) {
   });
 }
 
-// Viser login (eller opret personalekode) indtil personalet er logget ind.
-// `proeve` er en personale-sti der giver 401 hvis man ikke er logget ind.
-export async function kraevLogin(proeve, titel) {
+// Viser login (navn + kode) – eller "Opret første admin" – indtil personalet er logget ind.
+// Resolver med den indloggede { id, navn, rolle }.
+export async function kraevLogin(titel) {
   udloggetHaandterer = () => location.reload();
-  try {
-    await fetchProeve(proeve);
-    return;
-  } catch (e) {
-    if (e.status !== 401) throw e;
-  }
+  const mig = await hentMig();
+  if (mig) return mig;
   let info = {};
   try { info = await api('/api/info'); } catch { /* vises uden navn */ }
   const opsat = sand(info.personale_opsat);
+  let note = '';
+  try { note = sessionStorage.getItem('login-note') || ''; sessionStorage.removeItem('login-note'); } catch { /* ligegyldigt */ }
   const skaerm = document.createElement('div');
   skaerm.className = 'login-skaerm';
   skaerm.innerHTML = `
-    <form class="login-boks" novalidate>
+    <form class="login-boks" novalidate autocomplete="off">
       <h1 class="neon-titel">${esc(titel)}</h1>
       <p class="undertitel">${esc(info.traef_navn || 'Træf-butikken')}</p>
+      ${note ? `<p class="login-note">${esc(note)}</p>` : ''}
       ${opsat ? `
-        <label class="felt"><span>Personalekode</span>
-          <input type="password" name="kode" autocomplete="current-password" required autofocus></label>
+        <label class="felt"><span>Dit navn</span>
+          <input name="navn" autocomplete="username" autocapitalize="words" maxlength="40" required></label>
+        <label class="felt"><span>Kode</span>
+          <input type="password" name="kode" autocomplete="current-password" required></label>
       ` : `
-        <p>Der er ingen personalekode endnu. Vælg en kode, som alle bag disken skal bruge.</p>
-        <label class="felt"><span>Ny personalekode</span>
-          <input type="password" name="kode" autocomplete="new-password" minlength="6" required autofocus>
+        <h2 class="login-h2">Opret første admin</h2>
+        <p>Der er ingen personale endnu. Den første konto bliver admin og kan bagefter oprette resten under Personale.</p>
+        <label class="felt"><span>Dit navn</span>
+          <input name="navn" autocomplete="username" autocapitalize="words" maxlength="40" required></label>
+        <label class="felt"><span>Kode</span>
+          <input type="password" name="kode" autocomplete="new-password" minlength="6" required>
           <div class="hjaelp">Mindst 6 tegn.</div></label>
         <label class="felt"><span>Gentag koden</span>
           <input type="password" name="kode2" autocomplete="new-password" required></label>
       `}
       <p class="fejl-tekst" role="alert"></p>
-      <button class="knap primaer" type="submit">${opsat ? 'Log ind' : 'Opret personalekode'}</button>
+      <button class="knap primaer" type="submit">${opsat ? 'Log ind' : 'Opret admin og log ind'}</button>
     </form>`;
   document.body.append(skaerm);
   const form = skaerm.querySelector('form');
   const fejl = skaerm.querySelector('.fejl-tekst');
-  form.kode.focus();
+  form.navn.focus();
   return new Promise((ok) => {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       fejl.textContent = '';
+      const navn = form.navn.value.trim();
       const kode = form.kode.value;
+      if (!navn) { fejl.textContent = 'Skriv dit navn.'; form.navn.focus(); return; }
       if (!opsat) {
         if (kode.length < 6) { fejl.textContent = 'Koden skal være mindst 6 tegn.'; return; }
         if (kode !== form.kode2.value) { fejl.textContent = 'De to koder er ikke ens.'; return; }
-      } else if (!kode) { fejl.textContent = 'Skriv personalekoden.'; return; }
+      } else if (!kode) { fejl.textContent = 'Skriv din kode.'; form.kode.focus(); return; }
       const knap = form.querySelector('button');
       knap.disabled = true;
       try {
-        await api(opsat ? '/api/personale/login' : '/api/personale/opsaet', { metode: 'POST', data: { kode } });
+        await api(opsat ? '/api/personale/login' : '/api/personale/opsaet', { metode: 'POST', data: { navn, kode } });
+        const mig = await hentMig();
+        if (!mig) throw new Error('Login lykkedes ikke. Prøv igen.');
         skaerm.remove();
-        ok();
+        ok(mig);
       } catch (err) {
         fejl.textContent = err.message;
-        form.kode.select();
+        form.kode.value = '';
+        form.kode.focus();
       } finally {
         knap.disabled = false;
       }
@@ -183,15 +192,37 @@ export async function kraevLogin(proeve, titel) {
   });
 }
 
+// Den indloggede medarbejder, eller null
+async function hentMig() {
+  const svar = await fetch('/api/personale/mig', { credentials: 'same-origin' });
+  if (svar.status === 401) return null;
+  if (!svar.ok) throw new ApiFejl(`Serverfejl (${svar.status}).`, 'ukendt', svar.status);
+  return svar.json();
+}
+
+export const rolleNavn = (r) => ({ admin: 'admin', ekspedient: 'ekspedient' }[r] || r || '');
+
+// "Logget ind som Mads (ekspedient)" + Skift bruger + Log ud
+export function brugerBjaelke(mig, el) {
+  el.innerHTML = `<span class="bruger-navn">Logget ind som <strong>${esc(mig.navn)}</strong> (${esc(rolleNavn(mig.rolle))})</span>
+    <button class="knap lille" data-skift-bruger>Skift bruger</button>
+    <button class="knap lille" data-log-ud>Log ud</button>`;
+  el.querySelector('[data-skift-bruger]').addEventListener('click', () => logUd('Skift bruger: log ind med dit eget navn og din kode.'));
+  el.querySelector('[data-log-ud]').addEventListener('click', () => logUd(`${mig.navn} er logget ud.`));
+}
+
 async function fetchProeve(sti) {
   const svar = await fetch(sti, { credentials: 'same-origin' });
   if (!svar.ok) throw new ApiFejl('', '', svar.status);
 }
 
-export async function logUd() {
+// Log ud og vis login med det samme (samme side)
+export async function logUd(note = '') {
   try { await api('/api/personale/logout', { metode: 'POST' }); } catch { /* ligegyldigt */ }
+  try { if (note) sessionStorage.setItem('login-note', note); } catch { /* ligegyldigt */ }
   location.reload();
 }
+
 
 // SSE med automatisk genopretning. `vedForbind` kaldes ved hver (gen)forbindelse.
 export function liveForbindelse(sti, proeve, haandterere, vedForbind, vedStatus) {

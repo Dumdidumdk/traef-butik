@@ -1,27 +1,32 @@
-// Admin: varer, deltagere, indbetalinger, indstillinger og rapport
-import { api, kr, tilOere, oereTilFelt, esc, datoTid, sand, besked, bekraeft, kraevLogin, logUd, liveForbindelse } from '/admin/faelles.js';
+// Admin: check-in, varer, deltagere, indbetalinger, udbetaling, personale, indstillinger og rapport
+import { api, kr, tilOere, oereTilFelt, esc, datoTid, sand, besked, bekraeft, kraevLogin, brugerBjaelke, rolleNavn, liveForbindelse } from '/admin/faelles.js';
 
 const $ = (s, rod = document) => rod.querySelector(s);
-const FANER = ['checkin', 'varer', 'deltagere', 'indbetalinger', 'udbetaling', 'indstillinger', 'rapport'];
+const FANER = ['checkin', 'varer', 'deltagere', 'indbetalinger', 'udbetaling', 'indstillinger', 'personale', 'rapport'];
+const EKSPEDIENT_FANER = ['checkin', 'deltagere', 'indbetalinger'];
 const BILLEDTYPER = ['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/svg+xml'];
 const MAKS_BILLEDE = 3 * 1024 * 1024;
 let aktivFane = null;
-
-$('#log-ud').addEventListener('click', logUd);
+let mig = null; // den indloggede { id, navn, rolle }
+const erAdmin = () => mig?.rolle === 'admin';
+const maaSe = (fane) => erAdmin() || EKSPEDIENT_FANER.includes(fane);
 
 // Luk-knapper i dialoger
 document.querySelectorAll('dialog [value=fortryd]').forEach((k) => k.addEventListener('click', () => k.closest('dialog').close()));
 
-// ---------- Faner ----------
+// ---------- Faner (kun dem rollen må) ----------
 function visFane() {
-  const navn = FANER.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'checkin';
+  const oensket = location.hash.slice(1);
+  const navn = FANER.includes(oensket) && maaSe(oensket) ? oensket : 'checkin';
   aktivFane = navn;
   for (const f of FANER) {
     $(`#fane-${f}`).hidden = f !== navn;
     const fane = $(`[data-fane=${f}]`);
+    fane.hidden = !maaSe(f);
     fane.setAttribute('aria-selected', String(f === navn));
   }
-  ({ checkin: visCheckin, udbetaling: hentUdbetalinger, varer: hentVarer, deltagere: soegDeltagere, indbetalinger: hentIndbetalinger, indstillinger: hentIndstillinger, rapport: hentRapport })[navn]();
+  ({ checkin: visCheckin, udbetaling: hentUdbetalinger, varer: hentVarer, deltagere: soegDeltagere, indbetalinger: hentIndbetalinger,
+    indstillinger: hentIndstillinger, personale: hentPersonale, rapport: hentRapport })[navn]();
 }
 addEventListener('hashchange', visFane);
 
@@ -389,7 +394,7 @@ async function tegnDetalje() {
       <button class="knap">Nulstil PIN</button>
     </form>
     <div class="ny-pin" id="ny-pin" hidden></div>
-    <div class="detalje-afsnit">
+    <div class="detalje-afsnit" ${erAdmin() ? '' : 'hidden'}>
       <h4>Justér saldo</h4>
       <form data-f="saldo" novalidate>
         <div class="to-felter">
@@ -413,9 +418,9 @@ async function hentKontoudtog(d) {
     liste.sort((a, b) => String(b.oprettet).localeCompare(String(a.oprettet)) || b.id - a.id);
     const typer = { indbetaling: 'Indbetaling', koeb: 'Køb', refusion: 'Refusion', justering: 'Justering', udbetaling: 'Udbetaling' };
     $('#kontoudtog').innerHTML = liste.length ? `<div class="tabel-ramme"><table class="tabel">
-      <thead><tr><th>Tid</th><th>Type</th><th>Tekst</th><th class="tal">Beløb</th></tr></thead><tbody>
+      <thead><tr><th>Tid</th><th>Type</th><th>Tekst</th><th>Af</th><th class="tal">Beløb</th></tr></thead><tbody>
       ${liste.map((b) => `<tr><td>${datoTid(b.oprettet)}</td><td>${esc(typer[b.type] || b.type)}</td>
-        <td>${esc(b.tekst || (b.ordre_id ? `Ordre #${b.ordre_id}` : ''))}</td>
+        <td>${esc(b.tekst || (b.ordre_id ? `Ordre #${b.ordre_id}` : ''))}</td><td>${esc(b.af || '')}</td>
         <td class="tal ${b.beloeb_oere < 0 ? 'minus' : 'plus'}">${b.beloeb_oere > 0 ? '+' : ''}${kr(b.beloeb_oere)}</td></tr>`).join('')}
       </tbody></table></div>` : '<p class="tom">Ingen bevægelser endnu.</p>';
   } catch (err) {
@@ -606,8 +611,8 @@ async function hentUdbetalinger() {
     tegnUdbMangler();
     $('#udb-historik tbody').innerHTML = udbetalt.map((u) => `<tr>
       <td>${datoTid(u.oprettet)}</td><td>${esc(u.pc_nr)}</td><td>${esc(u.navn)}</td><td class="tal">${kr(u.beloeb_oere)}</td>
-      <td>${esc(metodeNavn(u.metode))}</td><td>${esc(u.reference || '')}</td></tr>`).join('')
-      || '<tr><td colspan="6" class="tom">Intet udbetalt endnu.</td></tr>';
+      <td>${esc(metodeNavn(u.metode))}</td><td>${esc(u.reference || '')}</td><td>${esc(u.udfoert_af || '')}</td></tr>`).join('')
+      || '<tr><td colspan="7" class="tom">Intet udbetalt endnu.</td></tr>';
   } catch (err) { besked(err.message, true); }
 }
 $('#udb-opdater').addEventListener('click', hentUdbetalinger);
@@ -680,8 +685,8 @@ async function hentIndbetalinger() {
     $('#indb-historik tbody').innerHTML = historik.map((i) => `<tr>
       <td>${datoTid(i.behandlet || i.oprettet)}</td><td>${esc(i.pc_nr)}</td><td>${esc(i.navn)}</td>
       <td class="tal">${kr(i.beloeb_oere)}</td><td>${esc(metodeNavn(i.metode))}</td><td>${esc(i.reference || '')}</td>
-      <td class="status ${esc(i.status)}">${esc(statusNavn(i.status))}</td></tr>`).join('')
-      || '<tr><td colspan="7" class="tom">Ingen behandlede indbetalinger endnu.</td></tr>';
+      <td class="status ${esc(i.status)}">${esc(statusNavn(i.status))}</td><td>${esc(i.behandlet_af || '')}</td></tr>`).join('')
+      || '<tr><td colspan="8" class="tom">Ingen behandlede indbetalinger endnu.</td></tr>';
   } catch (err) { besked(err.message, true); }
 }
 $('#indb-opdater').addEventListener('click', hentIndbetalinger);
@@ -816,8 +821,100 @@ function regnskab(r) {
     indbetalt ${kr(ind)} = omsætning ${kr(r.omsaetning_oere)} + udbetalt ${kr(r.udbetalt_oere)} + saldo ${kr(r.samlet_saldo_oere)}${ok ? '' : ` (forskel ${kr(ind - ud)})`}</p>`;
 }
 
+// ================= PERSONALE (kun admin) =================
+let personale = [];
+let redigeretPersonale = null;
+const persDialog = $('#personale-dialog');
+const persForm = $('#personale-form');
+
+async function hentPersonale() {
+  try {
+    personale = (await api('/api/admin/personale')) || [];
+    tegnPersonale();
+  } catch (err) { besked(err.message, true); }
+}
+
+function tegnPersonale() {
+  const liste = personale.slice().sort((a, b) => (sand(b.aktiv) - sand(a.aktiv)) || (a.rolle === b.rolle ? 0 : a.rolle === 'admin' ? -1 : 1)
+    || String(a.navn).localeCompare(b.navn, 'da'));
+  $('#personale-tabel tbody').innerHTML = liste.map((p) => `<tr data-id="${p.id}" class="${sand(p.aktiv) ? '' : 'spaerret'}">
+      <td><strong>${esc(p.navn)}</strong>${p.id === mig.id ? ' <span class="maerkat graa">dig</span>' : ''}</td>
+      <td><span class="rolle ${esc(p.rolle)}">${esc(rolleNavn(p.rolle))}</span></td>
+      <td class="status ${sand(p.aktiv) ? 'godkendt' : 'afvist'}">${sand(p.aktiv) ? 'Aktiv' : 'Spærret'}</td>
+      <td>${p.sidst_logget_ind ? datoTid(p.sidst_logget_ind) : '–'}</td>
+      <td class="handlinger"><button class="knap lille" data-p="ret">Ret</button>
+        <button class="knap lille ${sand(p.aktiv) ? 'fare' : ''}" data-p="aktiv">${sand(p.aktiv) ? 'Spær' : 'Genaktivér'}</button></td>
+    </tr>`).join('') || '<tr><td colspan="5" class="tom">Ingen medarbejdere.</td></tr>';
+}
+
+function aabnPersonale(p) {
+  redigeretPersonale = p || null;
+  persForm.reset();
+  $('.fejl-tekst', persForm).textContent = '';
+  $('#personale-dialog-titel').textContent = p ? `Ret ${p.navn}` : 'Ny medarbejder';
+  $('#kode-titel').textContent = p ? 'Ny kode' : 'Kode';
+  $('#kode-hjaelp').textContent = p ? 'Lad stå tomt for at beholde koden. Ellers mindst 6 tegn.' : 'Mindst 6 tegn.';
+  persForm.navn.value = p?.navn || '';
+  persForm.rolle.value = p?.rolle || 'ekspedient';
+  persDialog.showModal();
+  persForm.navn.focus();
+}
+$('#ny-personale').addEventListener('click', () => aabnPersonale(null));
+
+persForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const fejl = $('.fejl-tekst', persForm);
+  const navn = persForm.navn.value.trim();
+  const rolle = persForm.rolle.value;
+  const kode = persForm.kode.value;
+  const p = redigeretPersonale;
+  if (!navn) { fejl.textContent = 'Skriv et navn.'; return; }
+  if ((!p || kode) && kode.length < 6) { fejl.textContent = 'Koden skal være mindst 6 tegn.'; return; }
+  if (kode !== persForm.kode2.value) { fejl.textContent = 'De to koder er ikke ens.'; return; }
+  const data = { navn, rolle };
+  if (kode) data.kode = kode;
+  const knap = $('[type=submit]', persForm);
+  knap.disabled = true;
+  fejl.textContent = '';
+  try {
+    if (p) await api(`/api/admin/personale/${p.id}`, { metode: 'PUT', data });
+    else await api('/api/admin/personale', { metode: 'POST', data: { navn, rolle, kode } });
+    persDialog.close();
+    besked(p ? `${navn} er gemt.` : `${navn} er oprettet som ${rolleNavn(rolle)}.`);
+    // Har man taget admin fra sig selv, skal siden vise ekspedient-fanerne
+    if (p && p.id === mig.id && rolle !== mig.rolle) return location.reload();
+    hentPersonale();
+  } catch (err) {
+    fejl.textContent = err.message;
+  } finally {
+    knap.disabled = false;
+  }
+});
+
+$('#personale-tabel').addEventListener('click', async (e) => {
+  const knap = e.target.closest('[data-p]');
+  if (!knap) return;
+  const p = personale.find((x) => x.id === Number(knap.closest('tr').dataset.id));
+  if (!p) return;
+  if (knap.dataset.p === 'ret') return aabnPersonale(p);
+  const spaer = sand(p.aktiv);
+  if (spaer && !(await bekraeft(`Spær ${p.navn}?`, `${p.navn} bliver logget ud med det samme og kan ikke logge ind, før kontoen genaktiveres.`, 'Spær'))) return;
+  knap.disabled = true;
+  try {
+    await api(`/api/admin/personale/${p.id}`, { metode: 'PUT', data: { aktiv: !spaer } });
+    besked(spaer ? `${p.navn} er spærret.` : `${p.navn} er genaktiveret.`);
+    if (spaer && p.id === mig.id) return location.reload();
+    hentPersonale();
+  } catch (err) {
+    besked(err.message, true);
+    knap.disabled = false;
+  }
+});
+
 // ================= START =================
-await kraevLogin('/api/admin/indstillinger', 'Admin');
+mig = await kraevLogin('Admin');
+brugerBjaelke(mig, $('#bruger'));
+document.body.classList.toggle('er-admin', erAdmin());
 api('/api/info').then((i) => {
   if (i?.traef_navn) { traefNavn = i.traef_navn; $('#traef-navn').textContent = i.traef_navn; }
   if (i?.kunde_url) kundeAdresse = String(i.kunde_url).replace(/^https?:\/\//, '').replace(/\/$/, '');
@@ -825,6 +922,6 @@ api('/api/info').then((i) => {
 visFane();
 if (aktivFane !== 'indbetalinger') hentIndbetalinger();
 // Live: nye indbetalinger opdaterer badge og listen
-liveForbindelse('/api/butik/stream', '/api/admin/indstillinger', {
+liveForbindelse('/api/butik/stream', '/api/personale/mig', {
   indbetaling: () => hentIndbetalinger(),
 }, null, null);

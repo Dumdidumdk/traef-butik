@@ -1,5 +1,5 @@
 // Butiksskærmen: live ordrer, indbetalinger og udsolgt
-import { api, kr, esc, klokken, sand, besked, bekraeft, kraevLogin, liveForbindelse } from '/admin/faelles.js';
+import { api, kr, esc, klokken, sand, besked, bekraeft, kraevLogin, brugerBjaelke, liveForbindelse } from '/admin/faelles.js';
 
 const AKTIVE = ['ny', 'laves', 'klar'];
 const TO_TIMER = 2 * 60 * 60 * 1000;
@@ -112,6 +112,16 @@ function knapperHtml(o) {
     </div>`;
 }
 
+// "Hvem gjorde hvad" til værktøjstip: "Bestilt 14.02 af Kunden · Laves 14.03 af Mads"
+const STATUS_NAVN = { ny: 'Bestilt', laves: 'Startet', klar: 'Klar', leveret: 'Leveret', annulleret: 'Annulleret' };
+function historik(o) {
+  return (o.haendelser || []).map((h) => `${STATUS_NAVN[h.status] || h.status} ${klokken(h.tid)}${h.af ? ` af ${h.af}` : ''}`).join(' · ');
+}
+function sidsteAf(o) {
+  const h = (o.haendelser || []).filter((x) => x.status === o.status).pop();
+  return h?.af || '';
+}
+
 function kortHtml(o) {
   const min = minutterSiden(o.oprettet);
   const bord = o.levering === 'bord';
@@ -119,7 +129,7 @@ function kortHtml(o) {
   // Flad opbygning: CSS lægger felterne ud forskelligt i kompakt og stor visning
   return `<div class="kort-pc">PC ${esc(o.pc_nr)}</div>
     <span class="${tidKlasse(min)}" data-tid title="Bestilt kl. ${klokken(o.oprettet)}">${tidTekst(min)}</span>
-    <div class="kort-meta"><span class="kort-nr">#${o.nr ?? o.id}</span>
+    <div class="kort-meta" title="${esc(historik(o))}"><span class="kort-nr">#${o.nr ?? o.id}</span>
       <span class="maerke ${bord ? 'bord' : 'hent'}">${bord ? 'BRING TIL PLADS' : 'AFHENTES'}</span>
       <span class="kort-navn">${esc(o.navn)}</span></div>
     <ul class="linjer">${linjer}</ul>
@@ -307,7 +317,7 @@ function tegnSeneste() {
       <span class="nr">#${o.nr ?? o.id}</span><span class="pc">PC ${esc(o.pc_nr)}</span>
       <span class="varer">${esc(o.navn)} · ${(o.linjer || []).map((l) => `${l.antal}× ${esc(l.navn)}`).join(', ')}</span>
       <span class="status-maerke ${o.status}">${o.status === 'annulleret' ? 'Annulleret' : o.levering === 'bord' ? 'Leveret' : 'Afhentet'}</span>
-      <span class="tid">${klokken(o.opdateret)}</span>
+      <span class="tid" title="${esc(historik(o))}">${klokken(o.opdateret)}${sidsteAf(o) ? ` · ${esc(sidsteAf(o))}` : ''}</span>
     </div>`).join('') : '<p class="tom">Ingen endnu</p>';
 }
 $('#seneste').addEventListener('toggle', tegnSeneste);
@@ -361,19 +371,26 @@ $('#indbetalinger-liste').addEventListener('click', async (e) => {
   }
 });
 
-// ---------- Udsolgt ----------
+// ---------- Udsolgt (ekspedienter må også) ----------
 async function hentVarer() {
   try {
-    varer = await api('/api/admin/varer');
+    varer = (await api('/api/butik/varer')) || [];
     tegnVarer();
   } catch (err) { besked(err.message, true); }
 }
 function tegnVarer() {
-  const aktive = varer.filter((v) => sand(v.aktiv));
-  $('#udsolgt-liste').innerHTML = aktive.map((v) => `
+  // Grupperet efter kategori i den rækkefølge serveren sender
+  const grupper = new Map();
+  for (const v of varer) {
+    if (!sand(v.aktiv ?? 1)) continue;
+    const k = v.kategori || 'Andet';
+    if (!grupper.has(k)) grupper.set(k, []);
+    grupper.get(k).push(v);
+  }
+  $('#udsolgt-liste').innerHTML = [...grupper].map(([k, liste]) => `<h3 class="udsolgt-kat">${esc(k)}</h3>` + liste.map((v) => `
     <button class="knap vare-skift ${sand(v.udsolgt) ? 'udsolgt' : ''}" data-vare="${v.id}" aria-pressed="${sand(v.udsolgt)}">
       <span class="navn">${esc(v.navn)}</span><span class="tilstand">${sand(v.udsolgt) ? 'UDSOLGT' : 'På lager'}</span>
-    </button>`).join('') || '<p class="tom">Ingen varer</p>';
+    </button>`).join('')).join('') || '<p class="tom">Ingen varer sælges</p>';
 }
 $('#udsolgt-liste').addEventListener('click', async (e) => {
   const knap = e.target.closest('[data-vare]');
@@ -381,13 +398,10 @@ $('#udsolgt-liste').addEventListener('click', async (e) => {
   const v = varer.find((x) => x.id === Number(knap.dataset.vare));
   if (!v) return;
   knap.disabled = true;
-  const udsolgt = sand(v.udsolgt) ? 0 : 1;
+  const udsolgt = !sand(v.udsolgt);
   try {
-    const svar = await api(`/api/admin/varer/${v.id}`, { metode: 'PUT', data: {
-      navn: v.navn, beskrivelse: v.beskrivelse, kategori: v.kategori, pris_oere: v.pris_oere,
-      aktiv: sand(v.aktiv) ? 1 : 0, udsolgt, sortering: v.sortering,
-    } });
-    Object.assign(v, svar && svar.id ? svar : { udsolgt });
+    const svar = await api(`/api/butik/varer/${v.id}/udsolgt`, { metode: 'POST', data: { udsolgt } });
+    Object.assign(v, svar && svar.id ? svar : { udsolgt: udsolgt ? 1 : 0 });
     tegnVarer();
   } catch (err) {
     besked(err.message, true);
@@ -483,10 +497,11 @@ function visForbindelse(ok) {
 }
 
 // ---------- Start ----------
-await kraevLogin('/api/butik/ordrer?status=ny', 'Butiksskærm');
+const mig = await kraevLogin('Butiksskærm');
+brugerBjaelke(mig, $('#bruger'));
 await hentAlt();
 if (lydTil && kontekst()?.state !== 'running') visLydAdvarsel();
-liveForbindelse('/api/butik/stream', '/api/butik/ordrer?status=ny', {
+liveForbindelse('/api/butik/stream', '/api/personale/mig', {
   ordre: (o) => modtagOrdre(o, true),
   indbetaling: (i) => modtagIndbetaling(i, true),
 }, hentAlt, visForbindelse); // hent alt igen ved hver (gen)forbindelse, så intet går tabt

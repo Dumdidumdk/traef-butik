@@ -13,18 +13,19 @@
   <h1><span class="neon-titel" id="traef-navn">Træf-butikken</span> <span class="top-under">Admin</span></h1>
   <div class="top-knapper">
     <a class="knap lille primaer" href="/butik">Butiksskærm</a>
-    <button class="knap lille" id="log-ud">Log ud</button>
+    <div class="bruger" id="bruger"></div>
   </div>
 </header>
 
 <nav class="faner" role="tablist" aria-label="Admin-faner">
   <a class="fane" role="tab" href="#checkin" data-fane="checkin">Check-in</a>
-  <a class="fane" role="tab" href="#varer" data-fane="varer">Varer</a>
+  <a class="fane" role="tab" href="#varer" data-fane="varer" data-kun-admin hidden>Varer</a>
   <a class="fane" role="tab" href="#deltagere" data-fane="deltagere">Deltagere</a>
   <a class="fane" role="tab" href="#indbetalinger" data-fane="indbetalinger">Indbetalinger <span class="badge" id="indb-badge" hidden>0</span></a>
-  <a class="fane" role="tab" href="#udbetaling" data-fane="udbetaling">Udbetaling</a>
-  <a class="fane" role="tab" href="#indstillinger" data-fane="indstillinger">Indstillinger</a>
-  <a class="fane" role="tab" href="#rapport" data-fane="rapport">Rapport</a>
+  <a class="fane" role="tab" href="#udbetaling" data-fane="udbetaling" data-kun-admin hidden>Udbetaling</a>
+  <a class="fane" role="tab" href="#indstillinger" data-fane="indstillinger" data-kun-admin hidden>Indstillinger</a>
+  <a class="fane" role="tab" href="#personale" data-fane="personale" data-kun-admin hidden>Personale</a>
+  <a class="fane" role="tab" href="#rapport" data-fane="rapport" data-kun-admin hidden>Rapport</a>
 </nav>
 
 <main class="indhold">
@@ -105,7 +106,7 @@
     <div id="indb-afventer"></div>
     <h3 class="afsnit">Historik</h3>
     <div class="tabel-ramme"><table class="tabel" id="indb-historik">
-      <thead><tr><th>Tid</th><th>PC</th><th>Navn</th><th class="tal">Beløb</th><th>Metode</th><th>Reference</th><th>Status</th></tr></thead>
+      <thead><tr><th>Tid</th><th>PC</th><th>Navn</th><th class="tal">Beløb</th><th>Metode</th><th>Reference</th><th>Status</th><th>Godkendt af</th></tr></thead>
       <tbody></tbody></table></div>
   </section>
 
@@ -122,7 +123,18 @@
     <div id="udb-mangler"></div>
     <h3 class="afsnit">Udbetalt</h3>
     <div class="tabel-ramme"><table class="tabel" id="udb-historik">
-      <thead><tr><th>Tid</th><th>PC</th><th>Navn</th><th class="tal">Beløb</th><th>Metode</th><th>Reference</th></tr></thead>
+      <thead><tr><th>Tid</th><th>PC</th><th>Navn</th><th class="tal">Beløb</th><th>Metode</th><th>Reference</th><th>Udført af</th></tr></thead>
+      <tbody></tbody></table></div>
+  </section>
+
+  <!-- Personale (kun admin) -->
+  <section id="fane-personale" class="fane-side" role="tabpanel" hidden>
+    <div class="side-hoved"><h2>Personale</h2><button class="knap primaer" id="ny-personale">+ Ny medarbejder</button></div>
+    <p class="hjaelp">Hver medarbejder logger ind med sit eget navn og sin kode. <strong>Ekspedient</strong>: butiksskærm, udsolgt,
+      check-in, deltagere, indbetalinger og annullering. <strong>Admin</strong>: alt, også varer, saldojustering, udbetaling,
+      indstillinger, rapport og personale. En spærret konto bliver logget ud med det samme.</p>
+    <div class="tabel-ramme"><table class="tabel" id="personale-tabel">
+      <thead><tr><th>Navn</th><th>Rolle</th><th>Status</th><th>Sidst logget ind</th><th><span class="skjult-visuelt">Handlinger</span></th></tr></thead>
       <tbody></tbody></table></div>
   </section>
 
@@ -171,6 +183,27 @@
     <div id="rapport"></div>
   </section>
 </main>
+
+<!-- Personale-dialog -->
+<dialog class="boks" id="personale-dialog">
+  <form class="indhold" id="personale-form" novalidate autocomplete="off">
+    <h2 id="personale-dialog-titel">Ny medarbejder</h2>
+    <label class="felt"><span>Navn</span><input name="navn" maxlength="40" autocomplete="off" required></label>
+    <div class="felt"><span class="felt-titel" id="rolle-titel">Rolle</span>
+      <div class="hurtig" role="radiogroup" aria-labelledby="rolle-titel">
+        <label class="valg"><input type="radio" name="rolle" value="ekspedient" checked><span>Ekspedient</span></label>
+        <label class="valg"><input type="radio" name="rolle" value="admin"><span>Admin</span></label>
+      </div></div>
+    <label class="felt"><span id="kode-titel">Kode</span><input type="password" name="kode" autocomplete="new-password">
+      <div class="hjaelp" id="kode-hjaelp">Mindst 6 tegn.</div></label>
+    <label class="felt"><span>Gentag koden</span><input type="password" name="kode2" autocomplete="new-password"></label>
+    <p class="fejl-tekst" role="alert"></p>
+    <div class="knapper">
+      <button class="knap" type="button" value="fortryd">Fortryd</button>
+      <button class="knap primaer" type="submit">Gem</button>
+    </div>
+  </form>
+</dialog>
 
 <!-- Vare-dialog -->
 <dialog class="boks" id="vare-dialog">

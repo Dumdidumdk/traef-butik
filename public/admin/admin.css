@@ -286,3 +286,16 @@
   #ny-vare { flex: 1 1 100%; }
   .eksport .knap { width: 100%; }
 }
+
+/* Personale */
+.rolle { display: inline-block; padding: 2px 9px; border-radius: 6px; font-weight: 800; font-size: .85rem; }
+.rolle.admin { background: rgba(155,107,255,.2); color: var(--lilla); }
+.rolle.ekspedient { background: rgba(25,230,255,.12); color: var(--cyan); }
+#personale-tabel tr.spaerret td { opacity: .6; }
+#personale-tabel .handlinger { white-space: nowrap; text-align: right; }
+#personale-tabel .handlinger .knap { margin-left: 4px; }
+.top .bruger { justify-content: flex-end; }
+@media (max-width: 480px) {
+  .top-knapper { flex-wrap: wrap; width: 100%; }
+  .top .bruger { justify-content: flex-start; }
+}
