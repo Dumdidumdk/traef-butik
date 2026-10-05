@@ -68,13 +68,20 @@
   <section id="fane-varer" class="fane-side" role="tabpanel" hidden>
     <div class="side-hoved">
       <h2>Varer</h2>
-      <div class="knaprad">
-        <label class="afkryds"><input type="checkbox" id="vis-skjulte"> Vis skjulte</label>
-        <button class="knap primaer" id="ny-vare">+ Ny vare</button>
-      </div>
+      <button class="knap primaer stor" id="ny-vare">+ Ny vare</button>
     </div>
-    <p class="hjaelp">Træk et billede ind på en vare for at skifte billede. Skjulte varer kan kunderne ikke se.</p>
-    <div class="vare-liste" id="vare-liste"></div>
+    <div class="katalog-vaerktoej">
+      <label class="katalog-soeg"><span class="skjult-visuelt">Søg vare</span>
+        <input type="search" id="vare-soeg" placeholder="Søg vare eller kategori" autocomplete="off"></label>
+      <div class="segment" role="group" aria-label="Vis varer">
+        <button class="knap lille aktiv" data-vfilter="alle" aria-pressed="true">Alle</button>
+        <button class="knap lille" data-vfilter="saelges" aria-pressed="false">Sælges</button>
+        <button class="knap lille" data-vfilter="ikke" aria-pressed="false">Sælges ikke</button>
+      </div>
+      <div class="vare-taeller" id="vare-taeller" aria-live="polite"></div>
+    </div>
+    <p class="hjaelp">Sæt flueben ved de varer, butikken sælger – kunderne ser kun dem. Træk et billede ind på en vare for at skifte billede.</p>
+    <div id="vare-liste"></div>
   </section>
 
   <!-- Deltagere -->
@@ -105,6 +112,10 @@
   <!-- Udbetaling -->
   <section id="fane-udbetaling" class="fane-side" role="tabpanel" hidden>
     <div class="side-hoved"><h2>Udbetaling af restsaldo</h2><button class="knap lille" id="udb-opdater">Opdater</button></div>
+    <div class="eksport eksport-lille">
+      <button class="knap groen" data-eksport>⬇ Hent salget som regneark (Excel)</button>
+      <span class="hjaelp">Gem regnearket, når træffet er slut og alle er betalt ud.</span>
+    </div>
     <div class="noegletal" id="udb-tal"></div>
     <label class="felt"><span class="skjult-visuelt">Find PC</span>
       <input type="search" id="udb-soeg" placeholder="Find PC-nr eller navn" autocomplete="off"></label>
@@ -152,6 +163,11 @@
   <!-- Rapport -->
   <section id="fane-rapport" class="fane-side" role="tabpanel" hidden>
     <div class="side-hoved"><h2>Rapport</h2><button class="knap lille" id="rapport-opdater">Opdater</button></div>
+    <div class="eksport">
+      <button class="knap groen stor" data-eksport>⬇ Hent salget som regneark (Excel)</button>
+      <p class="hjaelp">Regnearket har faner med oversigt, salg pr. vare, salg pr. time, alle ordrer og ordrelinjer, indbetalinger,
+        udbetalinger og deltagere. Beløb står i kroner. Annullerede ordrer er med, men tæller ikke med i salget.</p>
+    </div>
     <div id="rapport"></div>
   </section>
 </main>
@@ -168,7 +184,8 @@
     <label class="felt"><span>Navn</span><input name="navn" maxlength="60" required></label>
     <label class="felt"><span>Beskrivelse</span><input name="beskrivelse" maxlength="140"></label>
     <div class="to-felter">
-      <label class="felt"><span>Kategori</span><input name="kategori" list="kategorier" maxlength="40"></label>
+      <label class="felt"><span>Kategori</span><input name="kategori" list="kategorier" maxlength="40" placeholder="Vælg eller skriv ny" autocomplete="off">
+        <div class="hjaelp">Vælg fra listen eller skriv en ny kategori.</div></label>
       <label class="felt"><span>Pris (kr.)</span><input name="pris" inputmode="decimal" placeholder="12,50" required></label>
     </div>
     <datalist id="kategorier"></datalist>
@@ -176,7 +193,7 @@
       <label class="felt"><span>Sortering</span><input name="sortering" type="number" step="1" value="0">
         <div class="hjaelp">Lavt tal står først.</div></label>
       <div class="felt afkryds-gruppe">
-        <label class="afkryds"><input type="checkbox" name="aktiv" checked> Synlig for kunder</label>
+        <label class="afkryds"><input type="checkbox" name="aktiv" checked> Sælges</label>
         <label class="afkryds"><input type="checkbox" name="udsolgt"> Udsolgt</label>
       </div>
     </div>

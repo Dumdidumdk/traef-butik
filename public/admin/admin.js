@@ -25,38 +25,141 @@ function visFane() {
 }
 addEventListener('hashchange', visFane);
 
-// ================= VARER =================
+// ================= VARER (katalog) =================
 let varer = [];
+let kategorier = [];
+let vareFilter = 'alle';
+const UDEN_KATEGORI = 'Uden kategori';
+const skiftNr = new Map(); // vare-id → nyeste ændring, så et gammelt fejlsvar ikke overskriver en nyere
 
 async function hentVarer() {
   try {
-    varer = await api('/api/admin/varer');
+    const [v, k] = await Promise.all([api('/api/admin/varer'), api('/api/admin/kategorier').catch(() => [])]);
+    varer = v || [];
+    kategorier = Array.isArray(k) ? k : [];
     tegnVarer();
   } catch (err) { besked(err.message, true); }
 }
 
-function tegnVarer() {
-  const visSkjulte = $('#vis-skjulte').checked;
-  const liste = varer
-    .filter((v) => visSkjulte || sand(v.aktiv))
-    .sort((a, b) => (a.sortering ?? 0) - (b.sortering ?? 0) || String(a.navn).localeCompare(b.navn, 'da'));
-  $('#vare-liste').innerHTML = liste.map((v) => `
-    <div class="vare ${sand(v.aktiv) ? '' : 'skjult'}" data-id="${v.id}">
+// Kategorier i katalogets rækkefølge, derefter egne
+function kategoriListe() {
+  const liste = [...kategorier];
+  for (const v of varer) {
+    const k = v.kategori || UDEN_KATEGORI;
+    if (!liste.includes(k)) liste.push(k);
+  }
+  return liste;
+}
+
+function vareSynlig(v) {
+  if (vareFilter === 'saelges' && !sand(v.aktiv)) return false;
+  if (vareFilter === 'ikke' && sand(v.aktiv)) return false;
+  const q = $('#vare-soeg').value.trim().toLowerCase();
+  if (!q) return true;
+  return `${v.navn} ${v.kategori || ''} ${v.beskrivelse || ''}`.toLowerCase().includes(q);
+}
+
+function vareHtml(v) {
+  const s = sand(v.aktiv);
+  return `<div class="vare ${s ? 'saelges' : 'ikke-saelges'}" data-id="${v.id}">
+      <label class="saelges-felt" title="Sælges">
+        <input type="checkbox" data-saelg ${s ? 'checked' : ''} aria-label="${esc(v.navn)} sælges">
+        <span class="flueben" aria-hidden="true"></span><span class="saelges-tekst">Sælges</span></label>
       ${v.billede_url ? `<img class="vare-billede" src="${esc(v.billede_url)}" alt="" loading="lazy">` : '<div class="vare-billede">Intet billede</div>'}
-      <div>
-        <div class="vare-navn">${esc(v.navn)}${sand(v.udsolgt) ? '<span class="maerkat roed">UDSOLGT</span>' : ''}${sand(v.aktiv) ? '' : '<span class="maerkat graa">SKJULT</span>'}</div>
-        <div class="vare-meta">${esc(v.kategori || 'Ingen kategori')} · sortering ${v.sortering ?? 0}</div>
+      <div class="vare-info">
+        <div class="vare-navn">${esc(v.navn)}${sand(v.udsolgt) ? '<span class="maerkat roed">UDSOLGT</span>' : ''}</div>
+        ${v.beskrivelse ? `<div class="vare-meta">${esc(v.beskrivelse)}</div>` : ''}
       </div>
       <div class="vare-pris">${kr(v.pris_oere)}</div>
       <div class="vare-knapper">
         <button class="knap lille" data-v="ret">Ret</button>
         <button class="knap lille" data-v="udsolgt">${sand(v.udsolgt) ? 'På lager' : 'Udsolgt'}</button>
-        <button class="knap lille ${sand(v.aktiv) ? 'fare' : ''}" data-v="aktiv">${sand(v.aktiv) ? 'Skjul' : 'Vis'}</button>
       </div>
-    </div>`).join('') || '<p class="tom">Ingen varer endnu.</p>';
-  $('#kategorier').innerHTML = [...new Set(varer.map((v) => v.kategori).filter(Boolean))].map((k) => `<option value="${esc(k)}">`).join('');
+    </div>`;
 }
-$('#vis-skjulte').addEventListener('change', tegnVarer);
+
+function tegnVarer() {
+  const sorter = (a, b) => (a.sortering ?? 0) - (b.sortering ?? 0) || String(a.navn).localeCompare(b.navn, 'da');
+  const html = kategoriListe().map((k) => {
+    const iKat = varer.filter((v) => (v.kategori || UDEN_KATEGORI) === k).sort(sorter);
+    const vist = iKat.filter(vareSynlig);
+    if (!vist.length) return '';
+    return `<section class="kat" data-kat="${esc(k)}">
+      <div class="kat-hoved">
+        <h3>${esc(k)} <span class="kat-antal" data-kat-antal></span></h3>
+        <div class="kat-knapper">
+          <button class="knap lille" data-kat-saet="1">Vælg alle</button>
+          <button class="knap lille" data-kat-saet="0">Fravælg alle</button>
+        </div>
+      </div>
+      <div class="vare-gitter">${vist.map(vareHtml).join('')}</div>
+    </section>`;
+  }).join('');
+  $('#vare-liste').innerHTML = html || `<p class="tom">${varer.length ? 'Ingen varer passer til søgningen.' : 'Ingen varer endnu.'}</p>`;
+  $('#kategorier').innerHTML = kategoriListe().filter((k) => k !== UDEN_KATEGORI).map((k) => `<option value="${esc(k)}">`).join('');
+  opdaterTaellere();
+}
+
+// Tællere øverst og pr. kategori – uden at tegne listen om
+function opdaterTaellere() {
+  const saelges = varer.filter((v) => sand(v.aktiv)).length;
+  $('#vare-taeller').innerHTML = `<strong>${saelges}</strong> af ${varer.length} varer sælges`;
+  for (const sek of document.querySelectorAll('.kat')) {
+    const iKat = varer.filter((v) => (v.kategori || UDEN_KATEGORI) === sek.dataset.kat);
+    $('[data-kat-antal]', sek).textContent = `${iKat.filter((v) => sand(v.aktiv)).length} af ${iKat.length} sælges`;
+  }
+}
+
+function visSaelges(v) {
+  const raekke = $(`.vare[data-id="${v.id}"]`);
+  if (!raekke) return;
+  const s = sand(v.aktiv);
+  raekke.classList.toggle('saelges', s);
+  raekke.classList.toggle('ikke-saelges', !s);
+  $('[data-saelg]', raekke).checked = s;
+}
+
+// Sæt "sælges" for flere varer: vises med det samme, rulles tilbage ved fejl
+async function saetSaelges(liste, aktiv) {
+  const aendret = liste.filter((v) => sand(v.aktiv) !== aktiv);
+  if (!aendret.length) return;
+  const foer = new Map();
+  for (const v of aendret) {
+    foer.set(v, v.aktiv);
+    skiftNr.set(v.id, (skiftNr.get(v.id) || 0) + 1);
+    v.aktiv = aktiv ? 1 : 0;
+    visSaelges(v);
+  }
+  const mine = new Map(aendret.map((v) => [v.id, skiftNr.get(v.id)]));
+  opdaterTaellere();
+  try {
+    await api('/api/admin/varer/aktiv', { metode: 'POST', data: { ids: aendret.map((v) => v.id), aktiv } });
+  } catch (err) {
+    for (const v of aendret) {
+      if (skiftNr.get(v.id) !== mine.get(v.id)) continue; // en nyere ændring vinder
+      v.aktiv = foer.get(v);
+      visSaelges(v);
+    }
+    opdaterTaellere();
+    besked(`Kunne ikke gemme: ${err.message}`, true);
+  }
+}
+
+$('#vare-soeg').addEventListener('input', tegnVarer);
+document.querySelectorAll('[data-vfilter]').forEach((k) => k.addEventListener('click', () => {
+  vareFilter = k.dataset.vfilter;
+  document.querySelectorAll('[data-vfilter]').forEach((x) => {
+    x.classList.toggle('aktiv', x === k);
+    x.setAttribute('aria-pressed', String(x === k));
+  });
+  tegnVarer();
+}));
+
+$('#vare-liste').addEventListener('change', (e) => {
+  if (!e.target.matches('[data-saelg]')) return;
+  const v = varer.find((x) => x.id === Number(e.target.closest('.vare').dataset.id));
+  if (v) saetSaelges([v], e.target.checked);
+});
 
 function vareData(v, aendring = {}) {
   return {
@@ -71,6 +174,14 @@ async function gemVare(v, aendring) {
 }
 
 $('#vare-liste').addEventListener('click', async (e) => {
+  // Vælg/fravælg alle (de viste) i en kategori
+  const katKnap = e.target.closest('[data-kat-saet]');
+  if (katKnap) {
+    const sek = katKnap.closest('.kat');
+    const ids = new Set([...sek.querySelectorAll('.vare')].map((r) => Number(r.dataset.id)));
+    saetSaelges(varer.filter((v) => ids.has(v.id)), katKnap.dataset.katSaet === '1');
+    return;
+  }
   const knap = e.target.closest('[data-v]');
   if (!knap) return;
   const v = varer.find((x) => x.id === Number(knap.closest('.vare').dataset.id));
@@ -80,11 +191,6 @@ $('#vare-liste').addEventListener('click', async (e) => {
   knap.disabled = true;
   try {
     if (h === 'udsolgt') await gemVare(v, { udsolgt: sand(v.udsolgt) ? 0 : 1 });
-    else if (sand(v.aktiv)) {
-      if (!(await bekraeft(`Skjul ${v.navn}?`, 'Kunderne kan ikke længere se eller bestille varen. Du kan vise den igen senere.', 'Skjul'))) { knap.disabled = false; return; }
-      await api(`/api/admin/varer/${v.id}`, { metode: 'DELETE' });
-      v.aktiv = 0;
-    } else await gemVare(v, { aktiv: 1 });
     tegnVarer();
   } catch (err) {
     besked(err.message, true);
@@ -661,6 +767,45 @@ async function hentRapport() {
   } catch (err) { besked(err.message, true); }
 }
 $('#rapport-opdater').addEventListener('click', hentRapport);
+
+// Hent salget som regneark. Hentes med fetch, så en fejl vises som besked i stedet for at blive gemt som fil.
+async function hentRegneark(knap) {
+  const tekst = knap.textContent;
+  knap.disabled = true;
+  knap.textContent = 'Laver regnearket…';
+  try {
+    const svar = await fetch('/api/admin/eksport.xlsx', { credentials: 'same-origin' });
+    if (svar.status === 401) return location.reload();
+    if (!svar.ok) {
+      const j = await svar.json().catch(() => null);
+      throw new Error(j?.fejl || `Serverfejl (${svar.status}).`);
+    }
+    const blob = await svar.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filnavn(svar.headers.get('Content-Disposition'));
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    besked('Regnearket er hentet – se under Overførsler.');
+  } catch (err) {
+    besked(err.message === 'Failed to fetch' ? 'Ingen forbindelse til serveren.' : err.message, true);
+  } finally {
+    knap.disabled = false;
+    knap.textContent = tekst;
+  }
+}
+
+// Filnavn fra Content-Disposition (filename*=UTF-8''… eller filename="…")
+function filnavn(cd) {
+  const utf = /filename\*\s*=\s*UTF-8''([^;]+)/i.exec(cd || '');
+  if (utf) { try { return decodeURIComponent(utf[1].trim().replace(/^"|"$/g, '')); } catch { /* brug næste */ } }
+  const alm = /filename\s*=\s*"?([^";]+)"?/i.exec(cd || '');
+  return alm ? alm[1].trim() : `salg-${new Date().toISOString().slice(0, 10)}.xlsx`;
+}
+document.querySelectorAll('[data-eksport]').forEach((k) => k.addEventListener('click', () => hentRegneark(k)));
 
 // Indbetalt = omsætning + udbetalt + samlet saldo
 function regnskab(r) {
