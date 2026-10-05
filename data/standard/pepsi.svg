@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+<defs><clipPath id="pe"><path d="M90 30 h20 v6 c0 14 18 22 18 40 v94 q0 12 -12 12 h-32 q-12 0 -12 -12 v-94 c0 -18 18 -26 18 -40 z"/></clipPath></defs>
+<ellipse cx="100" cy="188" rx="48" ry="6" fill="#000" opacity=".3"/>
+<path d="M90 30 h20 v6 c0 14 18 22 18 40 v94 q0 12 -12 12 h-32 q-12 0 -12 -12 v-94 c0 -18 18 -26 18 -40 z" fill="#2a160e"/>
+<rect x="87" y="14" width="26" height="18" rx="3" fill="#0b4ea2"/>
+<rect x="87" y="26" width="26" height="4" fill="#000" opacity=".2"/>
+<g clip-path="url(#pe)">
+  <rect x="60" y="98" width="80" height="50" fill="#0b4ea2"/><rect x="60" y="98" width="80" height="6" fill="#e41e2b"/><rect x="60" y="142" width="80" height="6" fill="#fff"/>
+  <text x="100" y="129" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="15" fill="#fff" textLength="52" lengthAdjust="spacingAndGlyphs">PEPSI</text>
+</g>
+<path d="M80 80 q-2 4 -2 10 v74 q0 4 3 4" stroke="#fff" stroke-opacity=".35" stroke-width="5" fill="none" stroke-linecap="round"/>
+</svg>

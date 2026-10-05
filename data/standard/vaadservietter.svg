@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+<defs></defs>
+<ellipse cx="100" cy="188" rx="48" ry="6" fill="#000" opacity=".3"/>
+<rect x="34" y="70" width="132" height="100" rx="26" fill="#9fd4f5"/>
+<rect x="34" y="70" width="132" height="100" rx="26" fill="none" stroke="#6fb6e6" stroke-width="3"/>
+<rect x="60" y="88" width="80" height="38" rx="14" fill="#1b5fae"/>
+<path d="M76 92 q24 -36 48 0" fill="#fff" stroke="#dde" stroke-width="2"/>
+<ellipse cx="100" cy="146" rx="34" ry="10" fill="#fff" opacity=".7"/>
+<text x="100" y="151" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="12" fill="#1b5fae">FRESH</text>
+<rect x="44" y="84" width="6" height="72" rx="3" fill="#fff" opacity=".35"/>
+</svg>

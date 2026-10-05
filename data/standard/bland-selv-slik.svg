@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+<defs><g id="bj"><circle cx="0" cy="-9" r="6.5"/><circle cx="-5" cy="-14" r="3"/><circle cx="5" cy="-14" r="3"/><ellipse cx="0" cy="4" rx="8.5" ry="10"/><circle cx="-8" cy="-1" r="3.2"/><circle cx="8" cy="-1" r="3.2"/><circle cx="-6" cy="13" r="3.5"/><circle cx="6" cy="13" r="3.5"/></g></defs>
+<ellipse cx="100" cy="188" rx="48" ry="6" fill="#000" opacity=".3"/>
+<use href="#bj" transform="translate(78 50) rotate(-15)" fill="#36b34a"/><use href="#bj" transform="translate(118 46) rotate(20)" fill="#e8283f"/><circle cx="98" cy="56" r="9" fill="#ff4fa3"/><rect x="128" y="58" width="18" height="12" rx="5" fill="#ffd23f"/><rect x="56" y="58" width="16" height="12" rx="3" fill="#1a1a1a"/>
+<path d="M52 64 h96 l8 116 h-112z" fill="#fff"/>
+<g clip-path="url(#bs)"><path d="M60 64 v116 M76 64 v116 M92 64 v116 M108 64 v116 M124 64 v116 M140 64 v116" stroke="#e41e2b" stroke-width="8"/></g>
+<clipPath id="bs"><path d="M52 64 h96 l8 116 h-112z"/></clipPath>
+<rect x="66" y="108" width="68" height="34" rx="6" fill="#fff"/>
+<text x="100" y="131" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="18" fill="#e41e2b">SLIK</text>
+<path d="M52 64 h96" stroke="#ddd" stroke-width="3"/>
+</svg>

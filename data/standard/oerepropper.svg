@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+<defs></defs>
+<ellipse cx="100" cy="188" rx="48" ry="6" fill="#000" opacity=".3"/>
+<rect x="46" y="40" width="108" height="140" rx="10" fill="#1b5fae"/>
+<rect x="88" y="48" width="24" height="6" rx="3" fill="#0a2a5c"/>
+<rect x="56" y="64" width="88" height="96" rx="12" fill="#fff" opacity=".85"/>
+<rect x="66" y="84" width="28" height="52" rx="12" fill="#ff8a1a" transform="rotate(-12 80 110)"/>
+<rect x="106" y="84" width="28" height="52" rx="12" fill="#ffb21a" transform="rotate(12 120 110)"/>
+<text x="100" y="174" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="12" fill="#fff">ZZZ</text>
+</svg>

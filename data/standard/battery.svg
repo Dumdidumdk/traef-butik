@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+<defs><clipPath id="ba"><path d="M68 30 q0 -8 8 -8 h48 q8 0 8 8 v146 q0 6 -8 6 h-48 q-8 0 -8 -6z"/></clipPath></defs>
+<ellipse cx="100" cy="188" rx="48" ry="6" fill="#000" opacity=".3"/>
+<path d="M68 30 q0 -8 8 -8 h48 q8 0 8 8 v146 q0 6 -8 6 h-48 q-8 0 -8 -6z" fill="#0d0d0d"/>
+<g clip-path="url(#ba)"><rect x="80" y="62" width="40" height="66" rx="5" fill="none" stroke="#ffd200" stroke-width="5"/><rect x="92" y="54" width="16" height="8" rx="2" fill="#ffd200"/><rect x="86" y="100" width="28" height="22" fill="#ffd200"/>
+<text x="100" y="158" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="12" fill="#ffd200" textLength="56" lengthAdjust="spacingAndGlyphs">BATTERY</text>
+<text x="100" y="171" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="7" fill="#fff">ENERGY</text></g>
+<ellipse cx="100" cy="24" rx="28" ry="5" fill="#d7dde3" stroke="#9aa3ab" stroke-width="1.5"/>
+<ellipse cx="104" cy="23" rx="6" ry="2" fill="#8d969e"/>
+<rect x="74" y="34" width="5" height="140" rx="2.5" fill="#fff" opacity=".22"/>
+</svg>

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+<defs></defs>
+<ellipse cx="100" cy="188" rx="48" ry="6" fill="#000" opacity=".3"/>
+<g transform="rotate(-14 100 110)">
+  <path d="M24 86 l4 -4 l4 4 l4 -4 l4 4 v48 l-4 4 l-4 -4 l-4 4 l-4 -4z" fill="#1a1c20"/>
+  <path d="M160 86 l4 -4 l4 4 l4 -4 l4 4 v48 l-4 4 l-4 -4 l-4 4 l-4 -4z" fill="#1a1c20"/>
+  <rect x="38" y="82" width="124" height="56" rx="4" fill="#2c2f36"/>
+  <rect x="38" y="82" width="20" height="56" fill="#39ff88"/>
+  <rect x="38" y="88" width="124" height="4" fill="#fff" opacity=".2"/>
+  <text x="100" y="116.84" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="18" fill="#39ff88" stroke="#11301c" stroke-width="3" paint-order="stroke">PROTEIN</text>
+</g>
+</svg>

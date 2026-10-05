@@ -1,0 +1,742 @@
+[
+  {
+    "katalog_id": "pepsi-05",
+    "navn": "Pepsi 0,5 l",
+    "beskrivelse": "Iskold cola",
+    "kategori": "Drikke",
+    "pris_oere": 2000,
+    "billede": "pepsi.svg",
+    "standard_aktiv": false,
+    "sortering": 1000
+  },
+  {
+    "katalog_id": "pepsi-max-05",
+    "navn": "Pepsi Max 0,5 l",
+    "beskrivelse": "Uden sukker",
+    "kategori": "Drikke",
+    "pris_oere": 2000,
+    "billede": "pepsi-max.svg",
+    "standard_aktiv": false,
+    "sortering": 1010
+  },
+  {
+    "katalog_id": "sprite-05",
+    "navn": "Sprite 0,5 l",
+    "beskrivelse": "Citron og lime",
+    "kategori": "Drikke",
+    "pris_oere": 2000,
+    "billede": "sprite.svg",
+    "standard_aktiv": false,
+    "sortering": 1020
+  },
+  {
+    "katalog_id": "7up-05",
+    "navn": "7UP 0,5 l",
+    "beskrivelse": "Lemon-lime med brus",
+    "kategori": "Drikke",
+    "pris_oere": 2000,
+    "billede": "7up.svg",
+    "standard_aktiv": false,
+    "sortering": 1030
+  },
+  {
+    "katalog_id": "faxe-kondi-free-05",
+    "navn": "Faxe Kondi Free 0,5 l",
+    "beskrivelse": "Uden sukker",
+    "kategori": "Drikke",
+    "pris_oere": 2000,
+    "billede": "faxe-kondi-free.svg",
+    "standard_aktiv": false,
+    "sortering": 1040
+  },
+  {
+    "katalog_id": "squash-05",
+    "navn": "Squash 0,5 l",
+    "beskrivelse": "Appelsinsodavand uden brus",
+    "kategori": "Drikke",
+    "pris_oere": 2000,
+    "billede": "squash.svg",
+    "standard_aktiv": false,
+    "sortering": 1050
+  },
+  {
+    "katalog_id": "danskvand-05",
+    "navn": "Danskvand citrus 0,5 l",
+    "beskrivelse": "Med brus og citron",
+    "kategori": "Drikke",
+    "pris_oere": 1500,
+    "billede": "danskvand.svg",
+    "standard_aktiv": false,
+    "sortering": 1060
+  },
+  {
+    "katalog_id": "iste-fersken-05",
+    "navn": "Iste fersken 0,5 l",
+    "beskrivelse": "Kold te med fersken",
+    "kategori": "Drikke",
+    "pris_oere": 2200,
+    "billede": "iste-fersken.svg",
+    "standard_aktiv": false,
+    "sortering": 1070
+  },
+  {
+    "katalog_id": "iste-citron-05",
+    "navn": "Iste citron 0,5 l",
+    "beskrivelse": "Kold te med citron",
+    "kategori": "Drikke",
+    "pris_oere": 2200,
+    "billede": "iste-citron.svg",
+    "standard_aktiv": false,
+    "sortering": 1080
+  },
+  {
+    "katalog_id": "cocio-027",
+    "navn": "Cocio 0,27 l",
+    "beskrivelse": "Den klassiske kakaomælk",
+    "kategori": "Drikke",
+    "pris_oere": 1800,
+    "billede": "cocio.svg",
+    "standard_aktiv": false,
+    "sortering": 1090
+  },
+  {
+    "katalog_id": "juice-appelsin-025",
+    "navn": "Appelsinjuice 0,25 l",
+    "beskrivelse": "Med sugerør",
+    "kategori": "Drikke",
+    "pris_oere": 1500,
+    "billede": "juice-appelsin.svg",
+    "standard_aktiv": false,
+    "sortering": 1100
+  },
+  {
+    "katalog_id": "juice-aeble-025",
+    "navn": "Æblejuice 0,25 l",
+    "beskrivelse": "Med sugerør",
+    "kategori": "Drikke",
+    "pris_oere": 1500,
+    "billede": "juice-aeble.svg",
+    "standard_aktiv": false,
+    "sortering": 1110
+  },
+  {
+    "katalog_id": "kakaomaelk-05",
+    "navn": "Kakaomælk 0,5 l",
+    "beskrivelse": "Kold chokolademælk",
+    "kategori": "Drikke",
+    "pris_oere": 1800,
+    "billede": "kakaomaelk.svg",
+    "standard_aktiv": false,
+    "sortering": 1120
+  },
+  {
+    "katalog_id": "monster-ultra-white",
+    "navn": "Monster Ultra White",
+    "beskrivelse": "Uden sukker",
+    "kategori": "Energi",
+    "pris_oere": 2500,
+    "billede": "monster-ultra-white.svg",
+    "standard_aktiv": false,
+    "sortering": 1000
+  },
+  {
+    "katalog_id": "monster-mango-loco",
+    "navn": "Monster Mango Loco",
+    "beskrivelse": "Mango og tropisk frugt",
+    "kategori": "Energi",
+    "pris_oere": 2500,
+    "billede": "monster-mango-loco.svg",
+    "standard_aktiv": false,
+    "sortering": 1010
+  },
+  {
+    "katalog_id": "monster-pipeline-punch",
+    "navn": "Monster Pipeline Punch",
+    "beskrivelse": "Passionsfrugt, appelsin og guava",
+    "kategori": "Energi",
+    "pris_oere": 2500,
+    "billede": "monster-pipeline-punch.svg",
+    "standard_aktiv": false,
+    "sortering": 1020
+  },
+  {
+    "katalog_id": "red-bull-sugarfree",
+    "navn": "Red Bull Sugarfree",
+    "beskrivelse": "Uden sukker",
+    "kategori": "Energi",
+    "pris_oere": 2500,
+    "billede": "red-bull-sugarfree.svg",
+    "standard_aktiv": false,
+    "sortering": 1030
+  },
+  {
+    "katalog_id": "celsius",
+    "navn": "Celsius",
+    "beskrivelse": "Energidrik med vitaminer",
+    "kategori": "Energi",
+    "pris_oere": 2500,
+    "billede": "celsius.svg",
+    "standard_aktiv": false,
+    "sortering": 1040
+  },
+  {
+    "katalog_id": "booster",
+    "navn": "Booster",
+    "beskrivelse": "Billig og stærk",
+    "kategori": "Energi",
+    "pris_oere": 1500,
+    "billede": "booster.svg",
+    "standard_aktiv": false,
+    "sortering": 1050
+  },
+  {
+    "katalog_id": "nocco",
+    "navn": "Nocco",
+    "beskrivelse": "Koffein og BCAA, uden sukker",
+    "kategori": "Energi",
+    "pris_oere": 2500,
+    "billede": "nocco.svg",
+    "standard_aktiv": false,
+    "sortering": 1060
+  },
+  {
+    "katalog_id": "battery",
+    "navn": "Battery",
+    "beskrivelse": "Finsk energidrik",
+    "kategori": "Energi",
+    "pris_oere": 2000,
+    "billede": "battery.svg",
+    "standard_aktiv": false,
+    "sortering": 1070
+  },
+  {
+    "katalog_id": "cappuccino",
+    "navn": "Cappuccino",
+    "beskrivelse": "Espresso med skummet mælk",
+    "kategori": "Varme drikke",
+    "pris_oere": 2000,
+    "billede": "cappuccino.svg",
+    "standard_aktiv": false,
+    "sortering": 1000
+  },
+  {
+    "katalog_id": "caffe-latte",
+    "navn": "Caffe latte",
+    "beskrivelse": "Stor kop med masser af mælk",
+    "kategori": "Varme drikke",
+    "pris_oere": 2500,
+    "billede": "caffe-latte.svg",
+    "standard_aktiv": false,
+    "sortering": 1010
+  },
+  {
+    "katalog_id": "espresso",
+    "navn": "Espresso",
+    "beskrivelse": "Dobbelt shot",
+    "kategori": "Varme drikke",
+    "pris_oere": 1500,
+    "billede": "espresso.svg",
+    "standard_aktiv": false,
+    "sortering": 1020
+  },
+  {
+    "katalog_id": "te",
+    "navn": "Te",
+    "beskrivelse": "Vælg selv tebrev",
+    "kategori": "Varme drikke",
+    "pris_oere": 1000,
+    "billede": "te.svg",
+    "standard_aktiv": false,
+    "sortering": 1030
+  },
+  {
+    "katalog_id": "varm-kakao",
+    "navn": "Varm kakao",
+    "beskrivelse": "Med flødeskum",
+    "kategori": "Varme drikke",
+    "pris_oere": 1500,
+    "billede": "varm-kakao.svg",
+    "standard_aktiv": false,
+    "sortering": 1040
+  },
+  {
+    "katalog_id": "toast-skinke",
+    "navn": "Toast med skinke",
+    "beskrivelse": "Uden ost",
+    "kategori": "Mad",
+    "pris_oere": 2000,
+    "billede": "toast-skinke.svg",
+    "standard_aktiv": false,
+    "sortering": 1000
+  },
+  {
+    "katalog_id": "toast-pepperoni",
+    "navn": "Toast med pepperoni og ost",
+    "beskrivelse": "Lidt stærk",
+    "kategori": "Mad",
+    "pris_oere": 2500,
+    "billede": "toast-pepperoni.svg",
+    "standard_aktiv": false,
+    "sortering": 1010
+  },
+  {
+    "katalog_id": "pizza-pepperoni",
+    "navn": "Pizza-slice pepperoni",
+    "beskrivelse": "Stort stykke med pepperoni",
+    "kategori": "Mad",
+    "pris_oere": 3500,
+    "billede": "pizza-pepperoni.svg",
+    "standard_aktiv": false,
+    "sortering": 1020
+  },
+  {
+    "katalog_id": "pizza-margherita",
+    "navn": "Pizza-slice margherita",
+    "beskrivelse": "Tomat, mozzarella og basilikum",
+    "kategori": "Mad",
+    "pris_oere": 3000,
+    "billede": "pizza-margherita.svg",
+    "standard_aktiv": false,
+    "sortering": 1030
+  },
+  {
+    "katalog_id": "hotdog",
+    "navn": "Hotdog",
+    "beskrivelse": "Med ketchup, sennep og ristede løg",
+    "kategori": "Mad",
+    "pris_oere": 2500,
+    "billede": "hotdog.svg",
+    "standard_aktiv": false,
+    "sortering": 1040
+  },
+  {
+    "katalog_id": "fransk-hotdog",
+    "navn": "Fransk hotdog",
+    "beskrivelse": "Brød med dressing og pølse",
+    "kategori": "Mad",
+    "pris_oere": 2500,
+    "billede": "fransk-hotdog.svg",
+    "standard_aktiv": false,
+    "sortering": 1050
+  },
+  {
+    "katalog_id": "burger",
+    "navn": "Burger",
+    "beskrivelse": "Oksekød, ost, salat og tomat",
+    "kategori": "Mad",
+    "pris_oere": 4500,
+    "billede": "burger.svg",
+    "standard_aktiv": false,
+    "sortering": 1060
+  },
+  {
+    "katalog_id": "pommes-frites",
+    "navn": "Pommes frites",
+    "beskrivelse": "Med ketchup eller remoulade",
+    "kategori": "Mad",
+    "pris_oere": 2500,
+    "billede": "pommes-frites.svg",
+    "standard_aktiv": false,
+    "sortering": 1070
+  },
+  {
+    "katalog_id": "kopnudler",
+    "navn": "Kopnudler",
+    "beskrivelse": "Kylling eller oksekød – vi hælder vand på",
+    "kategori": "Mad",
+    "pris_oere": 2000,
+    "billede": "kopnudler.svg",
+    "standard_aktiv": false,
+    "sortering": 1080
+  },
+  {
+    "katalog_id": "sandwich-kylling",
+    "navn": "Sandwich med kylling",
+    "beskrivelse": "Kylling, salat og karrydressing",
+    "kategori": "Mad",
+    "pris_oere": 4000,
+    "billede": "sandwich.svg",
+    "standard_aktiv": false,
+    "sortering": 1090
+  },
+  {
+    "katalog_id": "pastasalat",
+    "navn": "Pastasalat",
+    "beskrivelse": "Pasta, kylling, tomat og pesto",
+    "kategori": "Mad",
+    "pris_oere": 4000,
+    "billede": "pastasalat.svg",
+    "standard_aktiv": false,
+    "sortering": 1100
+  },
+  {
+    "katalog_id": "kyllingewrap",
+    "navn": "Kyllingewrap",
+    "beskrivelse": "Kylling, salat og dressing",
+    "kategori": "Mad",
+    "pris_oere": 4500,
+    "billede": "kyllingewrap.svg",
+    "standard_aktiv": false,
+    "sortering": 1110
+  },
+  {
+    "katalog_id": "nachos-ost",
+    "navn": "Nachos med ost",
+    "beskrivelse": "Med ostesauce og jalapeños",
+    "kategori": "Mad",
+    "pris_oere": 3500,
+    "billede": "nachos.svg",
+    "standard_aktiv": false,
+    "sortering": 1120
+  },
+  {
+    "katalog_id": "rundstykke-smoer",
+    "navn": "Rundstykke med smør",
+    "beskrivelse": "Friskbagt",
+    "kategori": "Morgenmad",
+    "pris_oere": 1000,
+    "billede": "rundstykke-smoer.svg",
+    "standard_aktiv": false,
+    "sortering": 1000
+  },
+  {
+    "katalog_id": "rundstykke-ost",
+    "navn": "Rundstykke med smør og ost",
+    "beskrivelse": "Friskbagt med skiveost",
+    "kategori": "Morgenmad",
+    "pris_oere": 1500,
+    "billede": "rundstykke-ost.svg",
+    "standard_aktiv": false,
+    "sortering": 1010
+  },
+  {
+    "katalog_id": "croissant",
+    "navn": "Croissant",
+    "beskrivelse": "Smørbagt",
+    "kategori": "Morgenmad",
+    "pris_oere": 1500,
+    "billede": "croissant.svg",
+    "standard_aktiv": false,
+    "sortering": 1020
+  },
+  {
+    "katalog_id": "wienerbroed-snegl",
+    "navn": "Wienerbrød (snegl)",
+    "beskrivelse": "Med kanel og glasur",
+    "kategori": "Morgenmad",
+    "pris_oere": 1500,
+    "billede": "wienerbroed.svg",
+    "standard_aktiv": false,
+    "sortering": 1030
+  },
+  {
+    "katalog_id": "skyr",
+    "navn": "Skyr med blåbær",
+    "beskrivelse": "Proteinrig og cremet",
+    "kategori": "Morgenmad",
+    "pris_oere": 2000,
+    "billede": "skyr.svg",
+    "standard_aktiv": false,
+    "sortering": 1040
+  },
+  {
+    "katalog_id": "havregroed",
+    "navn": "Havregrød",
+    "beskrivelse": "Med kanelsukker og æble",
+    "kategori": "Morgenmad",
+    "pris_oere": 1500,
+    "billede": "havregroed.svg",
+    "standard_aktiv": false,
+    "sortering": 1050
+  },
+  {
+    "katalog_id": "haribo-matador-mix",
+    "navn": "Haribo Matador Mix",
+    "beskrivelse": "Lakrids og vingummi, 375 g",
+    "kategori": "Slik og snacks",
+    "pris_oere": 2500,
+    "billede": "haribo-matador.svg",
+    "standard_aktiv": false,
+    "sortering": 1000
+  },
+  {
+    "katalog_id": "haribo-click-mix",
+    "navn": "Haribo Click Mix",
+    "beskrivelse": "Blandet vingummi, 375 g",
+    "kategori": "Slik og snacks",
+    "pris_oere": 2500,
+    "billede": "haribo-click.svg",
+    "standard_aktiv": false,
+    "sortering": 1010
+  },
+  {
+    "katalog_id": "haribo-guldbamser",
+    "navn": "Haribo Guldbamser",
+    "beskrivelse": "De klassiske, 275 g",
+    "kategori": "Slik og snacks",
+    "pris_oere": 2000,
+    "billede": "haribo-guldbamser.svg",
+    "standard_aktiv": false,
+    "sortering": 1020
+  },
+  {
+    "katalog_id": "bland-selv-slik",
+    "navn": "Bland-selv-slik",
+    "beskrivelse": "En pose blandet slik",
+    "kategori": "Slik og snacks",
+    "pris_oere": 2500,
+    "billede": "bland-selv-slik.svg",
+    "standard_aktiv": false,
+    "sortering": 1030
+  },
+  {
+    "katalog_id": "kims-havsalt",
+    "navn": "Kims Chips Havsalt",
+    "beskrivelse": "Sprøde chips med havsalt",
+    "kategori": "Slik og snacks",
+    "pris_oere": 2500,
+    "billede": "kims-havsalt.svg",
+    "standard_aktiv": false,
+    "sortering": 1040
+  },
+  {
+    "katalog_id": "kims-sour-cream",
+    "navn": "Kims Chips Sour Cream & Onion",
+    "beskrivelse": "Med smag af creme fraiche og løg",
+    "kategori": "Slik og snacks",
+    "pris_oere": 2500,
+    "billede": "kims-sour-cream.svg",
+    "standard_aktiv": false,
+    "sortering": 1050
+  },
+  {
+    "katalog_id": "popcorn",
+    "navn": "Popcorn",
+    "beskrivelse": "Saltede, friskpoppede",
+    "kategori": "Slik og snacks",
+    "pris_oere": 2000,
+    "billede": "popcorn.svg",
+    "standard_aktiv": false,
+    "sortering": 1060
+  },
+  {
+    "katalog_id": "mars",
+    "navn": "Mars",
+    "beskrivelse": "Chokolade, karamel og nougat",
+    "kategori": "Slik og snacks",
+    "pris_oere": 1200,
+    "billede": "mars.svg",
+    "standard_aktiv": false,
+    "sortering": 1070
+  },
+  {
+    "katalog_id": "twix",
+    "navn": "Twix",
+    "beskrivelse": "Kiks, karamel og chokolade",
+    "kategori": "Slik og snacks",
+    "pris_oere": 1200,
+    "billede": "twix.svg",
+    "standard_aktiv": false,
+    "sortering": 1080
+  },
+  {
+    "katalog_id": "kitkat",
+    "navn": "Kit Kat",
+    "beskrivelse": "Sprøde vaffelstænger",
+    "kategori": "Slik og snacks",
+    "pris_oere": 1200,
+    "billede": "kitkat.svg",
+    "standard_aktiv": false,
+    "sortering": 1090
+  },
+  {
+    "katalog_id": "bounty",
+    "navn": "Bounty",
+    "beskrivelse": "Kokos i mælkechokolade",
+    "kategori": "Slik og snacks",
+    "pris_oere": 1200,
+    "billede": "bounty.svg",
+    "standard_aktiv": false,
+    "sortering": 1100
+  },
+  {
+    "katalog_id": "toms-guldbarre",
+    "navn": "Toms Guldbarre",
+    "beskrivelse": "Dansk mælkechokolade",
+    "kategori": "Slik og snacks",
+    "pris_oere": 1200,
+    "billede": "guldbarre.svg",
+    "standard_aktiv": false,
+    "sortering": 1110
+  },
+  {
+    "katalog_id": "lakridspibe",
+    "navn": "Lakridspibe",
+    "beskrivelse": "Med sukkerkrymmel",
+    "kategori": "Slik og snacks",
+    "pris_oere": 500,
+    "billede": "lakridspibe.svg",
+    "standard_aktiv": false,
+    "sortering": 1120
+  },
+  {
+    "katalog_id": "peanuts",
+    "navn": "Peanuts",
+    "beskrivelse": "Saltede, 200 g",
+    "kategori": "Slik og snacks",
+    "pris_oere": 1500,
+    "billede": "peanuts.svg",
+    "standard_aktiv": false,
+    "sortering": 1130
+  },
+  {
+    "katalog_id": "proteinbar",
+    "navn": "Proteinbar",
+    "beskrivelse": "20 g protein",
+    "kategori": "Slik og snacks",
+    "pris_oere": 2000,
+    "billede": "proteinbar.svg",
+    "standard_aktiv": false,
+    "sortering": 1140
+  },
+  {
+    "katalog_id": "chokoladekiks",
+    "navn": "Chokoladekiks",
+    "beskrivelse": "Pakke digestive med chokolade",
+    "kategori": "Slik og snacks",
+    "pris_oere": 1500,
+    "billede": "chokoladekiks.svg",
+    "standard_aktiv": false,
+    "sortering": 1150
+  },
+  {
+    "katalog_id": "banan",
+    "navn": "Banan",
+    "beskrivelse": "Økologisk",
+    "kategori": "Frugt og sundt",
+    "pris_oere": 500,
+    "billede": "banan.svg",
+    "standard_aktiv": false,
+    "sortering": 1000
+  },
+  {
+    "katalog_id": "aeble",
+    "navn": "Æble",
+    "beskrivelse": "Sprødt dansk æble",
+    "kategori": "Frugt og sundt",
+    "pris_oere": 500,
+    "billede": "aeble.svg",
+    "standard_aktiv": false,
+    "sortering": 1010
+  },
+  {
+    "katalog_id": "appelsin",
+    "navn": "Appelsin",
+    "beskrivelse": "Saftig og sød",
+    "kategori": "Frugt og sundt",
+    "pris_oere": 600,
+    "billede": "appelsin.svg",
+    "standard_aktiv": false,
+    "sortering": 1020
+  },
+  {
+    "katalog_id": "gulerodsstaenger",
+    "navn": "Gulerodsstænger",
+    "beskrivelse": "Med dip",
+    "kategori": "Frugt og sundt",
+    "pris_oere": 1500,
+    "billede": "gulerodsstaenger.svg",
+    "standard_aktiv": false,
+    "sortering": 1030
+  },
+  {
+    "katalog_id": "noeddeblanding",
+    "navn": "Nøddeblanding",
+    "beskrivelse": "Usaltede nødder og rosiner",
+    "kategori": "Frugt og sundt",
+    "pris_oere": 2000,
+    "billede": "noeddeblanding.svg",
+    "standard_aktiv": false,
+    "sortering": 1040
+  },
+  {
+    "katalog_id": "oerepropper",
+    "navn": "Ørepropper",
+    "beskrivelse": "2 par skumpropper – sov godt",
+    "kategori": "Udstyr",
+    "pris_oere": 1000,
+    "billede": "oerepropper.svg",
+    "standard_aktiv": false,
+    "sortering": 1000
+  },
+  {
+    "katalog_id": "batterier-aa",
+    "navn": "Batterier AA (4 stk.)",
+    "beskrivelse": "Til mus og controller",
+    "kategori": "Udstyr",
+    "pris_oere": 3000,
+    "billede": "batterier-aa.svg",
+    "standard_aktiv": false,
+    "sortering": 1010
+  },
+  {
+    "katalog_id": "batterier-aaa",
+    "navn": "Batterier AAA (4 stk.)",
+    "beskrivelse": "Til headset og fjernbetjening",
+    "kategori": "Udstyr",
+    "pris_oere": 3000,
+    "billede": "batterier-aaa.svg",
+    "standard_aktiv": false,
+    "sortering": 1020
+  },
+  {
+    "katalog_id": "usb-c-kabel",
+    "navn": "USB-C-kabel 1 m",
+    "beskrivelse": "Til opladning og data",
+    "kategori": "Udstyr",
+    "pris_oere": 6000,
+    "billede": "usb-c-kabel.svg",
+    "standard_aktiv": false,
+    "sortering": 1030
+  },
+  {
+    "katalog_id": "kabelbinder",
+    "navn": "Kabelbinder (10 stk.)",
+    "beskrivelse": "Hold styr på kablerne",
+    "kategori": "Udstyr",
+    "pris_oere": 1000,
+    "billede": "kabelbinder.svg",
+    "standard_aktiv": false,
+    "sortering": 1040
+  },
+  {
+    "katalog_id": "kortspil",
+    "navn": "Kortspil",
+    "beskrivelse": "Til pauserne",
+    "kategori": "Udstyr",
+    "pris_oere": 3000,
+    "billede": "kortspil.svg",
+    "standard_aktiv": false,
+    "sortering": 1050
+  },
+  {
+    "katalog_id": "tandboerste-saet",
+    "navn": "Tandbørste-sæt",
+    "beskrivelse": "Tandbørste og lille tandpasta",
+    "kategori": "Udstyr",
+    "pris_oere": 2000,
+    "billede": "tandboerste.svg",
+    "standard_aktiv": false,
+    "sortering": 1060
+  },
+  {
+    "katalog_id": "vaadservietter",
+    "navn": "Vådservietter",
+    "beskrivelse": "Pakke med 20 stk.",
+    "kategori": "Udstyr",
+    "pris_oere": 1500,
+    "billede": "vaadservietter.svg",
+    "standard_aktiv": false,
+    "sortering": 1070
+  }
+]

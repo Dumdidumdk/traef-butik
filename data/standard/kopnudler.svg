@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+<defs></defs>
+<ellipse cx="100" cy="188" rx="48" ry="6" fill="#000" opacity=".3"/>
+<path d="M62 70 q8 -18 20 -6 q10 -16 20 -2 q10 -16 20 0 q10 -12 16 6" stroke="#f2d27a" stroke-width="7" fill="none" stroke-linecap="round"/>
+<path d="M70 70 q10 -8 16 2 q8 -10 16 0 q8 -8 16 2" stroke="#e8c160" stroke-width="5" fill="none" stroke-linecap="round"/>
+<path d="M52 74 h96 l-12 104 q-1 6 -7 6 h-58 q-6 0 -7 -6z" fill="#fff"/>
+<path d="M56 96 h88 l-3 30 h-82z" fill="#e41e2b"/>
+<text x="100" y="118" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="14" fill="#fff">NUDLER</text>
+<ellipse cx="100" cy="74" rx="48" ry="7" fill="#fff" stroke="#ddd" stroke-width="2"/>
+<g fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="4" stroke-linecap="round"><path d="M84 52 q-8 -10 0 -20 q8 -10 0 -20"/><path d="M100 54 q-8 -10 0 -20 q8 -10 0 -22"/><path d="M116 52 q-8 -10 0 -20 q8 -10 0 -20"/></g>
+</svg>
