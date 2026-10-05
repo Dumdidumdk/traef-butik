@@ -21,8 +21,8 @@ set "R_BRO=SPRUNGET OVER"
 set FEJL=0
 
 echo.
-echo ===== API-tests =====
-"%NODEEXE%" --test --test-reporter=spec test\api.test.js
+echo ===== API-tests (SPEC, tillæg 1, 2 og 3) =====
+"%NODEEXE%" --test --test-concurrency=1 --test-reporter=spec test\api.test.js test\katalog.test.js test\migration.test.js test\roller.test.js test\eksport.test.js
 if errorlevel 1 (set "R_API=FEJL" & set FEJL=1) else set "R_API=OK"
 
 if /i "%~1"=="hurtig" goto browser

@@ -9,6 +9,7 @@ const path = require('node:path');
 const { startServer, Browser, raatKald, aabnDb, tjekSaldiIDb, bevaegelserFra } = require('./hjaelp.js');
 
 const PERSONALE_KODE = 'hemmelig-kode-42';
+const ADMIN = 'Test-admin'; // tillæg 3: personale logger ind med navn + kode
 
 // Registrér alle svar med status 5xx – en sidste test kræver, at der ingen er.
 const svar5xx = [];
@@ -198,14 +199,14 @@ describe('Træf-butik API', () => {
     });
 
     it('kode under 6 tegn afvises', async () => {
-      forvent(await server.browser().post('/api/personale/opsaet', { kode: '12345' }), 400);
+      forvent(await server.browser().post('/api/personale/opsaet', { navn: ADMIN, kode: '12345' }), 400);
       const info = ok(await server.browser().get('/api/info'));
       assert.equal(somTal(info.personale_opsat), 0);
     });
 
     it('opsætning virker én gang og logger ind', async () => {
       personale = server.browser('personale');
-      ok(await personale.post('/api/personale/opsaet', { kode: PERSONALE_KODE }));
+      ok(await personale.post('/api/personale/opsaet', { navn: ADMIN, kode: PERSONALE_KODE }));
       assert.ok(personale.cookies.has('personale'), 'Ingen personale-cookie efter opsætning');
       ok(await personale.get('/api/admin/indstillinger'));
       const info = ok(await server.browser().get('/api/info'));
@@ -214,19 +215,19 @@ describe('Træf-butik API', () => {
 
     it('opsætning kan ikke gentages (heller ikke af en anden)', async () => {
       const angriber = server.browser('angriber');
-      forvent(await angriber.post('/api/personale/opsaet', { kode: 'ny-kode-123' }), fejl4xx);
+      forvent(await angriber.post('/api/personale/opsaet', { navn: 'Angriber', kode: 'ny-kode-123' }), fejl4xx);
       assert.ok(!angriber.cookies.has('personale'));
-      forvent(await personale.post('/api/personale/opsaet', { kode: 'ny-kode-123' }), fejl4xx);
+      forvent(await personale.post('/api/personale/opsaet', { navn: 'Angriber', kode: 'ny-kode-123' }), fejl4xx);
       // Den gamle kode virker stadig, den nye gør ikke.
-      forvent(await server.browser().post('/api/personale/login', { kode: 'ny-kode-123' }), 401);
-      ok(await server.browser().post('/api/personale/login', { kode: PERSONALE_KODE }));
+      forvent(await server.browser().post('/api/personale/login', { navn: 'Angriber', kode: 'ny-kode-123' }), 401);
+      ok(await server.browser().post('/api/personale/login', { navn: ADMIN, kode: PERSONALE_KODE }));
     });
 
     it('personale-login, forkert kode og logout', async () => {
       const b = server.browser();
-      forvent(await b.post('/api/personale/login', { kode: 'forkert-kode' }), 401);
+      forvent(await b.post('/api/personale/login', { navn: ADMIN, kode: 'forkert-kode' }), 401);
       assert.ok(!b.cookies.has('personale'));
-      ok(await b.post('/api/personale/login', { kode: PERSONALE_KODE }));
+      ok(await b.post('/api/personale/login', { navn: ADMIN, kode: PERSONALE_KODE }));
       assert.ok(b.cookies.has('personale'));
       const token = b.cookies.get('personale');
       ok(await b.get('/api/butik/ordrer'));
@@ -243,8 +244,8 @@ describe('Træf-butik API', () => {
       assert.ok(!JSON.stringify(ind).includes(PERSONALE_KODE));
       // Og kan ikke ændres via PUT.
       await personale.put('/api/admin/indstillinger', { personale_kode: 'hacket' });
-      forvent(await server.browser().post('/api/personale/login', { kode: 'hacket' }), 401);
-      ok(await server.browser().post('/api/personale/login', { kode: PERSONALE_KODE }));
+      forvent(await server.browser().post('/api/personale/login', { navn: ADMIN, kode: 'hacket' }), 401);
+      ok(await server.browser().post('/api/personale/login', { navn: ADMIN, kode: PERSONALE_KODE }));
     });
 
     it('opretter testvarer med kendte priser', async () => {
@@ -1415,7 +1416,7 @@ describe('Rapport', () => {
 
   it('rapporten summerer salg, indbetalinger og saldi', async () => {
     const p = server.browser('personale');
-    ok(await p.post('/api/personale/opsaet', { kode: PERSONALE_KODE }));
+    ok(await p.post('/api/personale/opsaet', { navn: ADMIN, kode: PERSONALE_KODE }));
     const lav = async (navn, pris_oere) => ok(await p.post('/api/admin/varer', { navn, kategori: 'Test', pris_oere, aktiv: 1, udsolgt: 0, sortering: 0 }));
     const v1 = await lav('Rapport-cola', 2000);
     const v2 = await lav('Rapport-vand', 1000);
