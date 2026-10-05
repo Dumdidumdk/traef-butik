@@ -197,3 +197,9 @@ body { display: flex; flex-direction: column; overflow: hidden; }
   .seneste-raekke { grid-template-columns: 4.5em minmax(0, 1fr) auto; }
   .seneste-raekke .nr, .seneste-raekke .tid { display: none; }
 }
+
+/* Bruger i topbjælken og kategorier i udsolgt-listen */
+.top-titel { flex-wrap: wrap; row-gap: 6px; }
+.top-titel .bruger .knap { min-height: 36px; }
+.udsolgt-kat { margin: 14px 0 6px; font-size: .9rem; text-transform: uppercase; letter-spacing: .06em; color: var(--cyan); }
+.udsolgt-kat:first-child { margin-top: 0; }

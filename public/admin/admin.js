@@ -1,62 +1,170 @@
-// Admin: varer, deltagere, indbetalinger, indstillinger og rapport
-import { api, kr, tilOere, oereTilFelt, esc, datoTid, sand, besked, bekraeft, kraevLogin, logUd, liveForbindelse } from '/admin/faelles.js';
+// Admin: check-in, varer, deltagere, indbetalinger, udbetaling, personale, indstillinger og rapport
+import { api, kr, tilOere, oereTilFelt, esc, datoTid, sand, besked, bekraeft, kraevLogin, brugerBjaelke, rolleNavn, liveForbindelse } from '/admin/faelles.js';
 
 const $ = (s, rod = document) => rod.querySelector(s);
-const FANER = ['checkin', 'varer', 'deltagere', 'indbetalinger', 'udbetaling', 'indstillinger', 'rapport'];
+const FANER = ['checkin', 'varer', 'deltagere', 'indbetalinger', 'udbetaling', 'indstillinger', 'personale', 'rapport'];
+const EKSPEDIENT_FANER = ['checkin', 'deltagere', 'indbetalinger'];
 const BILLEDTYPER = ['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/svg+xml'];
 const MAKS_BILLEDE = 3 * 1024 * 1024;
 let aktivFane = null;
-
-$('#log-ud').addEventListener('click', logUd);
+let mig = null; // den indloggede { id, navn, rolle }
+const erAdmin = () => mig?.rolle === 'admin';
+const maaSe = (fane) => erAdmin() || EKSPEDIENT_FANER.includes(fane);
 
 // Luk-knapper i dialoger
 document.querySelectorAll('dialog [value=fortryd]').forEach((k) => k.addEventListener('click', () => k.closest('dialog').close()));
 
-// ---------- Faner ----------
+// ---------- Faner (kun dem rollen må) ----------
 function visFane() {
-  const navn = FANER.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'checkin';
+  const oensket = location.hash.slice(1);
+  const navn = FANER.includes(oensket) && maaSe(oensket) ? oensket : 'checkin';
   aktivFane = navn;
   for (const f of FANER) {
     $(`#fane-${f}`).hidden = f !== navn;
     const fane = $(`[data-fane=${f}]`);
+    fane.hidden = !maaSe(f);
     fane.setAttribute('aria-selected', String(f === navn));
   }
-  ({ checkin: visCheckin, udbetaling: hentUdbetalinger, varer: hentVarer, deltagere: soegDeltagere, indbetalinger: hentIndbetalinger, indstillinger: hentIndstillinger, rapport: hentRapport })[navn]();
+  ({ checkin: visCheckin, udbetaling: hentUdbetalinger, varer: hentVarer, deltagere: soegDeltagere, indbetalinger: hentIndbetalinger,
+    indstillinger: hentIndstillinger, personale: hentPersonale, rapport: hentRapport })[navn]();
 }
 addEventListener('hashchange', visFane);
 
-// ================= VARER =================
+// ================= VARER (katalog) =================
 let varer = [];
+let kategorier = [];
+let vareFilter = 'alle';
+const UDEN_KATEGORI = 'Uden kategori';
+const skiftNr = new Map(); // vare-id → nyeste ændring, så et gammelt fejlsvar ikke overskriver en nyere
 
 async function hentVarer() {
   try {
-    varer = await api('/api/admin/varer');
+    const [v, k] = await Promise.all([api('/api/admin/varer'), api('/api/admin/kategorier').catch(() => [])]);
+    varer = v || [];
+    kategorier = Array.isArray(k) ? k : [];
     tegnVarer();
   } catch (err) { besked(err.message, true); }
 }
 
-function tegnVarer() {
-  const visSkjulte = $('#vis-skjulte').checked;
-  const liste = varer
-    .filter((v) => visSkjulte || sand(v.aktiv))
-    .sort((a, b) => (a.sortering ?? 0) - (b.sortering ?? 0) || String(a.navn).localeCompare(b.navn, 'da'));
-  $('#vare-liste').innerHTML = liste.map((v) => `
-    <div class="vare ${sand(v.aktiv) ? '' : 'skjult'}" data-id="${v.id}">
+// Kategorier i katalogets rækkefølge, derefter egne
+function kategoriListe() {
+  const liste = [...kategorier];
+  for (const v of varer) {
+    const k = v.kategori || UDEN_KATEGORI;
+    if (!liste.includes(k)) liste.push(k);
+  }
+  return liste;
+}
+
+function vareSynlig(v) {
+  if (vareFilter === 'saelges' && !sand(v.aktiv)) return false;
+  if (vareFilter === 'ikke' && sand(v.aktiv)) return false;
+  const q = $('#vare-soeg').value.trim().toLowerCase();
+  if (!q) return true;
+  return `${v.navn} ${v.kategori || ''} ${v.beskrivelse || ''}`.toLowerCase().includes(q);
+}
+
+function vareHtml(v) {
+  const s = sand(v.aktiv);
+  return `<div class="vare ${s ? 'saelges' : 'ikke-saelges'}" data-id="${v.id}">
+      <label class="saelges-felt" title="Sælges">
+        <input type="checkbox" data-saelg ${s ? 'checked' : ''} aria-label="${esc(v.navn)} sælges">
+        <span class="flueben" aria-hidden="true"></span><span class="saelges-tekst">Sælges</span></label>
       ${v.billede_url ? `<img class="vare-billede" src="${esc(v.billede_url)}" alt="" loading="lazy">` : '<div class="vare-billede">Intet billede</div>'}
-      <div>
-        <div class="vare-navn">${esc(v.navn)}${sand(v.udsolgt) ? '<span class="maerkat roed">UDSOLGT</span>' : ''}${sand(v.aktiv) ? '' : '<span class="maerkat graa">SKJULT</span>'}</div>
-        <div class="vare-meta">${esc(v.kategori || 'Ingen kategori')} · sortering ${v.sortering ?? 0}</div>
+      <div class="vare-info">
+        <div class="vare-navn">${esc(v.navn)}${sand(v.udsolgt) ? '<span class="maerkat roed">UDSOLGT</span>' : ''}</div>
+        ${v.beskrivelse ? `<div class="vare-meta">${esc(v.beskrivelse)}</div>` : ''}
       </div>
       <div class="vare-pris">${kr(v.pris_oere)}</div>
       <div class="vare-knapper">
         <button class="knap lille" data-v="ret">Ret</button>
         <button class="knap lille" data-v="udsolgt">${sand(v.udsolgt) ? 'På lager' : 'Udsolgt'}</button>
-        <button class="knap lille ${sand(v.aktiv) ? 'fare' : ''}" data-v="aktiv">${sand(v.aktiv) ? 'Skjul' : 'Vis'}</button>
       </div>
-    </div>`).join('') || '<p class="tom">Ingen varer endnu.</p>';
-  $('#kategorier').innerHTML = [...new Set(varer.map((v) => v.kategori).filter(Boolean))].map((k) => `<option value="${esc(k)}">`).join('');
+    </div>`;
 }
-$('#vis-skjulte').addEventListener('change', tegnVarer);
+
+function tegnVarer() {
+  const sorter = (a, b) => (a.sortering ?? 0) - (b.sortering ?? 0) || String(a.navn).localeCompare(b.navn, 'da');
+  const html = kategoriListe().map((k) => {
+    const iKat = varer.filter((v) => (v.kategori || UDEN_KATEGORI) === k).sort(sorter);
+    const vist = iKat.filter(vareSynlig);
+    if (!vist.length) return '';
+    return `<section class="kat" data-kat="${esc(k)}">
+      <div class="kat-hoved">
+        <h3>${esc(k)} <span class="kat-antal" data-kat-antal></span></h3>
+        <div class="kat-knapper">
+          <button class="knap lille" data-kat-saet="1">Vælg alle</button>
+          <button class="knap lille" data-kat-saet="0">Fravælg alle</button>
+        </div>
+      </div>
+      <div class="vare-gitter">${vist.map(vareHtml).join('')}</div>
+    </section>`;
+  }).join('');
+  $('#vare-liste').innerHTML = html || `<p class="tom">${varer.length ? 'Ingen varer passer til søgningen.' : 'Ingen varer endnu.'}</p>`;
+  $('#kategorier').innerHTML = kategoriListe().filter((k) => k !== UDEN_KATEGORI).map((k) => `<option value="${esc(k)}">`).join('');
+  opdaterTaellere();
+}
+
+// Tællere øverst og pr. kategori – uden at tegne listen om
+function opdaterTaellere() {
+  const saelges = varer.filter((v) => sand(v.aktiv)).length;
+  $('#vare-taeller').innerHTML = `<strong>${saelges}</strong> af ${varer.length} varer sælges`;
+  for (const sek of document.querySelectorAll('.kat')) {
+    const iKat = varer.filter((v) => (v.kategori || UDEN_KATEGORI) === sek.dataset.kat);
+    $('[data-kat-antal]', sek).textContent = `${iKat.filter((v) => sand(v.aktiv)).length} af ${iKat.length} sælges`;
+  }
+}
+
+function visSaelges(v) {
+  const raekke = $(`.vare[data-id="${v.id}"]`);
+  if (!raekke) return;
+  const s = sand(v.aktiv);
+  raekke.classList.toggle('saelges', s);
+  raekke.classList.toggle('ikke-saelges', !s);
+  $('[data-saelg]', raekke).checked = s;
+}
+
+// Sæt "sælges" for flere varer: vises med det samme, rulles tilbage ved fejl
+async function saetSaelges(liste, aktiv) {
+  const aendret = liste.filter((v) => sand(v.aktiv) !== aktiv);
+  if (!aendret.length) return;
+  const foer = new Map();
+  for (const v of aendret) {
+    foer.set(v, v.aktiv);
+    skiftNr.set(v.id, (skiftNr.get(v.id) || 0) + 1);
+    v.aktiv = aktiv ? 1 : 0;
+    visSaelges(v);
+  }
+  const mine = new Map(aendret.map((v) => [v.id, skiftNr.get(v.id)]));
+  opdaterTaellere();
+  try {
+    await api('/api/admin/varer/aktiv', { metode: 'POST', data: { ids: aendret.map((v) => v.id), aktiv } });
+  } catch (err) {
+    for (const v of aendret) {
+      if (skiftNr.get(v.id) !== mine.get(v.id)) continue; // en nyere ændring vinder
+      v.aktiv = foer.get(v);
+      visSaelges(v);
+    }
+    opdaterTaellere();
+    besked(`Kunne ikke gemme: ${err.message}`, true);
+  }
+}
+
+$('#vare-soeg').addEventListener('input', tegnVarer);
+document.querySelectorAll('[data-vfilter]').forEach((k) => k.addEventListener('click', () => {
+  vareFilter = k.dataset.vfilter;
+  document.querySelectorAll('[data-vfilter]').forEach((x) => {
+    x.classList.toggle('aktiv', x === k);
+    x.setAttribute('aria-pressed', String(x === k));
+  });
+  tegnVarer();
+}));
+
+$('#vare-liste').addEventListener('change', (e) => {
+  if (!e.target.matches('[data-saelg]')) return;
+  const v = varer.find((x) => x.id === Number(e.target.closest('.vare').dataset.id));
+  if (v) saetSaelges([v], e.target.checked);
+});
 
 function vareData(v, aendring = {}) {
   return {
@@ -71,6 +179,14 @@ async function gemVare(v, aendring) {
 }
 
 $('#vare-liste').addEventListener('click', async (e) => {
+  // Vælg/fravælg alle (de viste) i en kategori
+  const katKnap = e.target.closest('[data-kat-saet]');
+  if (katKnap) {
+    const sek = katKnap.closest('.kat');
+    const ids = new Set([...sek.querySelectorAll('.vare')].map((r) => Number(r.dataset.id)));
+    saetSaelges(varer.filter((v) => ids.has(v.id)), katKnap.dataset.katSaet === '1');
+    return;
+  }
   const knap = e.target.closest('[data-v]');
   if (!knap) return;
   const v = varer.find((x) => x.id === Number(knap.closest('.vare').dataset.id));
@@ -80,11 +196,6 @@ $('#vare-liste').addEventListener('click', async (e) => {
   knap.disabled = true;
   try {
     if (h === 'udsolgt') await gemVare(v, { udsolgt: sand(v.udsolgt) ? 0 : 1 });
-    else if (sand(v.aktiv)) {
-      if (!(await bekraeft(`Skjul ${v.navn}?`, 'Kunderne kan ikke længere se eller bestille varen. Du kan vise den igen senere.', 'Skjul'))) { knap.disabled = false; return; }
-      await api(`/api/admin/varer/${v.id}`, { metode: 'DELETE' });
-      v.aktiv = 0;
-    } else await gemVare(v, { aktiv: 1 });
     tegnVarer();
   } catch (err) {
     besked(err.message, true);
@@ -283,7 +394,7 @@ async function tegnDetalje() {
       <button class="knap">Nulstil PIN</button>
     </form>
     <div class="ny-pin" id="ny-pin" hidden></div>
-    <div class="detalje-afsnit">
+    <div class="detalje-afsnit" ${erAdmin() ? '' : 'hidden'}>
       <h4>Justér saldo</h4>
       <form data-f="saldo" novalidate>
         <div class="to-felter">
@@ -307,9 +418,9 @@ async function hentKontoudtog(d) {
     liste.sort((a, b) => String(b.oprettet).localeCompare(String(a.oprettet)) || b.id - a.id);
     const typer = { indbetaling: 'Indbetaling', koeb: 'Køb', refusion: 'Refusion', justering: 'Justering', udbetaling: 'Udbetaling' };
     $('#kontoudtog').innerHTML = liste.length ? `<div class="tabel-ramme"><table class="tabel">
-      <thead><tr><th>Tid</th><th>Type</th><th>Tekst</th><th class="tal">Beløb</th></tr></thead><tbody>
+      <thead><tr><th>Tid</th><th>Type</th><th>Tekst</th><th>Af</th><th class="tal">Beløb</th></tr></thead><tbody>
       ${liste.map((b) => `<tr><td>${datoTid(b.oprettet)}</td><td>${esc(typer[b.type] || b.type)}</td>
-        <td>${esc(b.tekst || (b.ordre_id ? `Ordre #${b.ordre_id}` : ''))}</td>
+        <td>${esc(b.tekst || (b.ordre_id ? `Ordre #${b.ordre_id}` : ''))}</td><td>${esc(b.af || '')}</td>
         <td class="tal ${b.beloeb_oere < 0 ? 'minus' : 'plus'}">${b.beloeb_oere > 0 ? '+' : ''}${kr(b.beloeb_oere)}</td></tr>`).join('')}
       </tbody></table></div>` : '<p class="tom">Ingen bevægelser endnu.</p>';
   } catch (err) {
@@ -500,8 +611,8 @@ async function hentUdbetalinger() {
     tegnUdbMangler();
     $('#udb-historik tbody').innerHTML = udbetalt.map((u) => `<tr>
       <td>${datoTid(u.oprettet)}</td><td>${esc(u.pc_nr)}</td><td>${esc(u.navn)}</td><td class="tal">${kr(u.beloeb_oere)}</td>
-      <td>${esc(metodeNavn(u.metode))}</td><td>${esc(u.reference || '')}</td></tr>`).join('')
-      || '<tr><td colspan="6" class="tom">Intet udbetalt endnu.</td></tr>';
+      <td>${esc(metodeNavn(u.metode))}</td><td>${esc(u.reference || '')}</td><td>${esc(u.udfoert_af || '')}</td></tr>`).join('')
+      || '<tr><td colspan="7" class="tom">Intet udbetalt endnu.</td></tr>';
   } catch (err) { besked(err.message, true); }
 }
 $('#udb-opdater').addEventListener('click', hentUdbetalinger);
@@ -574,8 +685,8 @@ async function hentIndbetalinger() {
     $('#indb-historik tbody').innerHTML = historik.map((i) => `<tr>
       <td>${datoTid(i.behandlet || i.oprettet)}</td><td>${esc(i.pc_nr)}</td><td>${esc(i.navn)}</td>
       <td class="tal">${kr(i.beloeb_oere)}</td><td>${esc(metodeNavn(i.metode))}</td><td>${esc(i.reference || '')}</td>
-      <td class="status ${esc(i.status)}">${esc(statusNavn(i.status))}</td></tr>`).join('')
-      || '<tr><td colspan="7" class="tom">Ingen behandlede indbetalinger endnu.</td></tr>';
+      <td class="status ${esc(i.status)}">${esc(statusNavn(i.status))}</td><td>${esc(i.behandlet_af || '')}</td></tr>`).join('')
+      || '<tr><td colspan="8" class="tom">Ingen behandlede indbetalinger endnu.</td></tr>';
   } catch (err) { besked(err.message, true); }
 }
 $('#indb-opdater').addEventListener('click', hentIndbetalinger);
@@ -662,6 +773,45 @@ async function hentRapport() {
 }
 $('#rapport-opdater').addEventListener('click', hentRapport);
 
+// Hent salget som regneark. Hentes med fetch, så en fejl vises som besked i stedet for at blive gemt som fil.
+async function hentRegneark(knap) {
+  const tekst = knap.textContent;
+  knap.disabled = true;
+  knap.textContent = 'Laver regnearket…';
+  try {
+    const svar = await fetch('/api/admin/eksport.xlsx', { credentials: 'same-origin' });
+    if (svar.status === 401) return location.reload();
+    if (!svar.ok) {
+      const j = await svar.json().catch(() => null);
+      throw new Error(j?.fejl || `Serverfejl (${svar.status}).`);
+    }
+    const blob = await svar.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filnavn(svar.headers.get('Content-Disposition'));
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    besked('Regnearket er hentet – se under Overførsler.');
+  } catch (err) {
+    besked(err.message === 'Failed to fetch' ? 'Ingen forbindelse til serveren.' : err.message, true);
+  } finally {
+    knap.disabled = false;
+    knap.textContent = tekst;
+  }
+}
+
+// Filnavn fra Content-Disposition (filename*=UTF-8''… eller filename="…")
+function filnavn(cd) {
+  const utf = /filename\*\s*=\s*UTF-8''([^;]+)/i.exec(cd || '');
+  if (utf) { try { return decodeURIComponent(utf[1].trim().replace(/^"|"$/g, '')); } catch { /* brug næste */ } }
+  const alm = /filename\s*=\s*"?([^";]+)"?/i.exec(cd || '');
+  return alm ? alm[1].trim() : `salg-${new Date().toISOString().slice(0, 10)}.xlsx`;
+}
+document.querySelectorAll('[data-eksport]').forEach((k) => k.addEventListener('click', () => hentRegneark(k)));
+
 // Indbetalt = omsætning + udbetalt + samlet saldo
 function regnskab(r) {
   const ind = r.indbetalt_oere || 0;
@@ -671,8 +821,100 @@ function regnskab(r) {
     indbetalt ${kr(ind)} = omsætning ${kr(r.omsaetning_oere)} + udbetalt ${kr(r.udbetalt_oere)} + saldo ${kr(r.samlet_saldo_oere)}${ok ? '' : ` (forskel ${kr(ind - ud)})`}</p>`;
 }
 
+// ================= PERSONALE (kun admin) =================
+let personale = [];
+let redigeretPersonale = null;
+const persDialog = $('#personale-dialog');
+const persForm = $('#personale-form');
+
+async function hentPersonale() {
+  try {
+    personale = (await api('/api/admin/personale')) || [];
+    tegnPersonale();
+  } catch (err) { besked(err.message, true); }
+}
+
+function tegnPersonale() {
+  const liste = personale.slice().sort((a, b) => (sand(b.aktiv) - sand(a.aktiv)) || (a.rolle === b.rolle ? 0 : a.rolle === 'admin' ? -1 : 1)
+    || String(a.navn).localeCompare(b.navn, 'da'));
+  $('#personale-tabel tbody').innerHTML = liste.map((p) => `<tr data-id="${p.id}" class="${sand(p.aktiv) ? '' : 'spaerret'}">
+      <td><strong>${esc(p.navn)}</strong>${p.id === mig.id ? ' <span class="maerkat graa">dig</span>' : ''}</td>
+      <td><span class="rolle ${esc(p.rolle)}">${esc(rolleNavn(p.rolle))}</span></td>
+      <td class="status ${sand(p.aktiv) ? 'godkendt' : 'afvist'}">${sand(p.aktiv) ? 'Aktiv' : 'Spærret'}</td>
+      <td>${p.sidst_logget_ind ? datoTid(p.sidst_logget_ind) : '–'}</td>
+      <td class="handlinger"><button class="knap lille" data-p="ret">Ret</button>
+        <button class="knap lille ${sand(p.aktiv) ? 'fare' : ''}" data-p="aktiv">${sand(p.aktiv) ? 'Spær' : 'Genaktivér'}</button></td>
+    </tr>`).join('') || '<tr><td colspan="5" class="tom">Ingen medarbejdere.</td></tr>';
+}
+
+function aabnPersonale(p) {
+  redigeretPersonale = p || null;
+  persForm.reset();
+  $('.fejl-tekst', persForm).textContent = '';
+  $('#personale-dialog-titel').textContent = p ? `Ret ${p.navn}` : 'Ny medarbejder';
+  $('#kode-titel').textContent = p ? 'Ny kode' : 'Kode';
+  $('#kode-hjaelp').textContent = p ? 'Lad stå tomt for at beholde koden. Ellers mindst 6 tegn.' : 'Mindst 6 tegn.';
+  persForm.navn.value = p?.navn || '';
+  persForm.rolle.value = p?.rolle || 'ekspedient';
+  persDialog.showModal();
+  persForm.navn.focus();
+}
+$('#ny-personale').addEventListener('click', () => aabnPersonale(null));
+
+persForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const fejl = $('.fejl-tekst', persForm);
+  const navn = persForm.navn.value.trim();
+  const rolle = persForm.rolle.value;
+  const kode = persForm.kode.value;
+  const p = redigeretPersonale;
+  if (!navn) { fejl.textContent = 'Skriv et navn.'; return; }
+  if ((!p || kode) && kode.length < 6) { fejl.textContent = 'Koden skal være mindst 6 tegn.'; return; }
+  if (kode !== persForm.kode2.value) { fejl.textContent = 'De to koder er ikke ens.'; return; }
+  const data = { navn, rolle };
+  if (kode) data.kode = kode;
+  const knap = $('[type=submit]', persForm);
+  knap.disabled = true;
+  fejl.textContent = '';
+  try {
+    if (p) await api(`/api/admin/personale/${p.id}`, { metode: 'PUT', data });
+    else await api('/api/admin/personale', { metode: 'POST', data: { navn, rolle, kode } });
+    persDialog.close();
+    besked(p ? `${navn} er gemt.` : `${navn} er oprettet som ${rolleNavn(rolle)}.`);
+    // Har man taget admin fra sig selv, skal siden vise ekspedient-fanerne
+    if (p && p.id === mig.id && rolle !== mig.rolle) return location.reload();
+    hentPersonale();
+  } catch (err) {
+    fejl.textContent = err.message;
+  } finally {
+    knap.disabled = false;
+  }
+});
+
+$('#personale-tabel').addEventListener('click', async (e) => {
+  const knap = e.target.closest('[data-p]');
+  if (!knap) return;
+  const p = personale.find((x) => x.id === Number(knap.closest('tr').dataset.id));
+  if (!p) return;
+  if (knap.dataset.p === 'ret') return aabnPersonale(p);
+  const spaer = sand(p.aktiv);
+  if (spaer && !(await bekraeft(`Spær ${p.navn}?`, `${p.navn} bliver logget ud med det samme og kan ikke logge ind, før kontoen genaktiveres.`, 'Spær'))) return;
+  knap.disabled = true;
+  try {
+    await api(`/api/admin/personale/${p.id}`, { metode: 'PUT', data: { aktiv: !spaer } });
+    besked(spaer ? `${p.navn} er spærret.` : `${p.navn} er genaktiveret.`);
+    if (spaer && p.id === mig.id) return location.reload();
+    hentPersonale();
+  } catch (err) {
+    besked(err.message, true);
+    knap.disabled = false;
+  }
+});
+
 // ================= START =================
-await kraevLogin('/api/admin/indstillinger', 'Admin');
+mig = await kraevLogin('Admin');
+brugerBjaelke(mig, $('#bruger'));
+document.body.classList.toggle('er-admin', erAdmin());
 api('/api/info').then((i) => {
   if (i?.traef_navn) { traefNavn = i.traef_navn; $('#traef-navn').textContent = i.traef_navn; }
   if (i?.kunde_url) kundeAdresse = String(i.kunde_url).replace(/^https?:\/\//, '').replace(/\/$/, '');
@@ -680,6 +922,6 @@ api('/api/info').then((i) => {
 visFane();
 if (aktivFane !== 'indbetalinger') hentIndbetalinger();
 // Live: nye indbetalinger opdaterer badge og listen
-liveForbindelse('/api/butik/stream', '/api/admin/indstillinger', {
+liveForbindelse('/api/butik/stream', '/api/personale/mig', {
   indbetaling: () => hentIndbetalinger(),
 }, null, null);

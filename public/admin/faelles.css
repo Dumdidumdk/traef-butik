@@ -110,3 +110,10 @@ dialog.boks .knapper { display: flex; gap: .6em; justify-content: flex-end; flex
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition: none !important; }
 }
+
+/* Login-note og bruger-bjælke */
+.login-note { padding: .6em .8em; border-radius: 10px; background: #0f2730; border: 1px solid var(--cyan); font-weight: 600; }
+.login-h2 { font-size: 1.15rem; color: var(--groen); margin: .4em 0 .2em; }
+.bruger { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+.bruger-navn { color: var(--daempet); font-size: .95rem; }
+.bruger-navn strong { color: var(--tekst); }
