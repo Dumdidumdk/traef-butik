@@ -22,16 +22,16 @@
       <input type="search" id="soeg" placeholder="Søg PC / #ordre" inputmode="numeric" autocomplete="off"></label>
     <div class="segment" role="group" aria-label="Filter">
       <button class="knap lille aktiv" data-filter="alle" aria-pressed="true">Alle</button>
-      <button class="knap lille" data-filter="bord" aria-pressed="false">Kun levering</button>
-      <button class="knap lille" data-filter="hent" aria-pressed="false">Kun afhentning</button>
+      <button class="knap lille" data-filter="bord" aria-pressed="false"><span class="lang">Kun </span>levering</button>
+      <button class="knap lille" data-filter="hent" aria-pressed="false"><span class="lang">Kun </span>afhentning</button>
     </div>
     <button class="knap lille" id="indbetalinger-knap" aria-expanded="false" aria-controls="indbetalinger-panel">
       Indbetalinger <span class="badge" id="indbetalinger-antal" hidden>0</span></button>
     <button class="knap lille" id="udsolgt-knap" aria-expanded="false" aria-controls="udsolgt-panel">Udsolgt</button>
-    <button class="knap lille" id="visning-knap" aria-pressed="false" title="Skift mellem kompakte og store ordrekort">▤ Stor visning</button>
-    <button class="knap lille" id="lyd-knap" aria-pressed="true">🔊 Lyd til</button>
-    <button class="knap lille" id="fuldskaerm-knap">⛶ Fuldskærm</button>
-    <a class="knap lille" href="/admin">Admin</a>
+    <button class="knap lille ikon-knap" id="visning-knap" aria-pressed="false"><span class="ikon" aria-hidden="true">▤</span><span class="tekst">Stor visning</span></button>
+    <button class="knap lille ikon-knap" id="lyd-knap" aria-pressed="true"><span class="ikon" aria-hidden="true">🔊</span><span class="tekst">Lyd til</span></button>
+    <button class="knap lille ikon-knap" id="fuldskaerm-knap"><span class="ikon" aria-hidden="true">⛶</span><span class="tekst">Fuldskærm</span></button>
+    <a class="knap lille ikon-knap" href="/admin" title="Admin" aria-label="Admin"><span class="ikon" aria-hidden="true">⚙</span><span class="tekst">Admin</span></a>
   </div>
 </header>
 
@@ -40,6 +40,7 @@
   <span>Browseren kræver et klik, før den må afspille lyd.</span>
 </div>
 
+<div class="tavle-ramme">
 <main class="tavle" id="tavle">
   <section class="kolonne" data-kolonne="ny" aria-labelledby="h-ny">
     <h2 id="h-ny" class="kolonne-titel ny">Nye <span class="antal" data-antal="ny">0</span></h2>
@@ -58,6 +59,7 @@
     <div class="kort-liste" data-liste="klar-hent"></div>
   </section>
 </main>
+</div>
 
 <details class="seneste" id="seneste">
   <summary>Seneste leverede <span class="antal" data-antal="seneste">0</span> <span class="hjaelp">(sidste 2 timer)</span></summary>
@@ -72,6 +74,7 @@
 <aside class="panel" id="udsolgt-panel" hidden aria-label="Udsolgt">
   <div class="panel-hoved"><h2>Udsolgt / på lager</h2><button class="knap lille" data-luk>Luk</button></div>
   <p class="hjaelp panel-hjaelp">Tryk på en vare for at skifte. Udsolgte varer kan ikke bestilles.</p>
+  <label class="panel-soeg"><span class="skjult-visuelt">Find vare</span><input type="search" id="udsolgt-soeg" placeholder="Find vare" autocomplete="off"></label>
   <div class="panel-indhold" id="udsolgt-liste"></div>
 </aside>
 

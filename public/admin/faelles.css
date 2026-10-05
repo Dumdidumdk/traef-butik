@@ -114,6 +114,14 @@ dialog.boks .knapper { display: flex; gap: .6em; justify-content: flex-end; flex
 /* Login-note og bruger-bjælke */
 .login-note { padding: .6em .8em; border-radius: 10px; background: #0f2730; border: 1px solid var(--cyan); font-weight: 600; }
 .login-h2 { font-size: 1.15rem; color: var(--groen); margin: .4em 0 .2em; }
-.bruger { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
-.bruger-navn { color: var(--daempet); font-size: .95rem; }
+.bruger { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.bruger-navn { min-width: 0; max-width: 16em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--daempet); font-size: .95rem; }
 .bruger-navn strong { color: var(--tekst); }
+.rolle-maerke { flex: 0 0 auto; padding: 1px 7px; border-radius: 6px; font-size: .75rem; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; }
+.rolle-maerke.admin { background: rgba(155,107,255,.22); color: var(--lilla); }
+.rolle-maerke.ekspedient { background: rgba(25,230,255,.14); color: var(--cyan); }
+.bruger .knap { flex: 0 0 auto; white-space: nowrap; }
+.ikon-knap .ikon { line-height: 1; }
+/* Knap der ikke kan bruges lige nu (forklaring i værktøjstip) */
+.knap[aria-disabled="true"] { opacity: .45; cursor: not-allowed; border-style: dashed; }
+.ikon svg { display: block; }

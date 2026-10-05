@@ -12,7 +12,7 @@
 <header class="top">
   <h1><span class="neon-titel" id="traef-navn">Træf-butikken</span> <span class="top-under">Admin</span></h1>
   <div class="top-knapper">
-    <a class="knap lille primaer" href="/butik">Butiksskærm</a>
+    <a class="knap lille primaer ikon-knap" href="/butik" title="Butiksskærm" aria-label="Butiksskærm"><span class="ikon" aria-hidden="true">🖥</span><span class="tekst">Butiksskærm</span></a>
     <div class="bruger" id="bruger"></div>
   </div>
 </header>
@@ -178,7 +178,8 @@
     <div class="eksport">
       <button class="knap groen stor" data-eksport>⬇ Hent salget som regneark (Excel)</button>
       <p class="hjaelp">Regnearket har faner med oversigt, salg pr. vare, salg pr. time, alle ordrer og ordrelinjer, indbetalinger,
-        udbetalinger og deltagere. Beløb står i kroner. Annullerede ordrer er med, men tæller ikke med i salget.</p>
+        udbetalinger, deltagere og personale (hvem der har leveret, annulleret og godkendt). Beløb står i kroner.
+        Annullerede ordrer er med, men tæller ikke med i salget.</p>
     </div>
     <div id="rapport"></div>
   </section>
@@ -193,7 +194,8 @@
       <div class="hurtig" role="radiogroup" aria-labelledby="rolle-titel">
         <label class="valg"><input type="radio" name="rolle" value="ekspedient" checked><span>Ekspedient</span></label>
         <label class="valg"><input type="radio" name="rolle" value="admin"><span>Admin</span></label>
-      </div></div>
+      </div>
+      <div class="hjaelp" id="rolle-hjaelp" hidden></div></div>
     <label class="felt"><span id="kode-titel">Kode</span><input type="password" name="kode" autocomplete="new-password">
       <div class="hjaelp" id="kode-hjaelp">Mindst 6 tegn.</div></label>
     <label class="felt"><span>Gentag koden</span><input type="password" name="kode2" autocomplete="new-password"></label>

@@ -299,3 +299,42 @@
   .top-knapper { flex-wrap: wrap; width: 100%; }
   .top .bruger { justify-content: flex-start; }
 }
+
+/* Fanerækken: fade i kanten, når der er flere faner at rulle til */
+.faner { scrollbar-width: none; }
+.faner::-webkit-scrollbar { display: none; }
+.faner.kan-hoejre { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent); }
+.faner.kan-venstre { -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 56px), transparent); mask-image: linear-gradient(to left, #000 calc(100% - 56px), transparent); }
+.faner.kan-venstre.kan-hoejre {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 56px, #000 calc(100% - 56px), transparent);
+  mask-image: linear-gradient(to right, transparent, #000 56px, #000 calc(100% - 56px), transparent);
+}
+.valg input:disabled + span { opacity: .4; cursor: not-allowed; border-style: dashed; }
+.top-knapper { flex-wrap: wrap; align-items: center; justify-content: flex-end; min-width: 0; }
+
+/* Mobil: topbjælken på højst to korte linjer – titel + ikoner, derefter navn + rolle */
+@media (max-width: 600px) {
+  .top { flex-wrap: nowrap; gap: 8px; padding: 8px 12px; }
+  .top h1 { flex: 1 1 0; min-width: 3.5em; font-size: 1.15rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .top-under { display: none; }
+  .top-knapper { flex: 0 1 auto; flex-wrap: nowrap; gap: 6px; width: auto; }
+  .top .ikon-knap .tekst, .bruger .forstavelse { display: none; }
+  .top .ikon-knap { min-width: 38px; min-height: 38px; padding: 0 .45em; font-size: 1.05rem; }
+  .bruger { gap: 5px; }
+  .bruger-navn { max-width: 6.5em; font-size: .9rem; }
+  .faner { padding: 4px 12px 0; }
+  .fane { min-height: 44px; padding: 0 12px; }
+  .katalog-vaerktoej { top: 50px; }
+}
+
+/* Personale på mobil: hver medarbejder som et lille kort i stedet for en bred tabel */
+@media (max-width: 600px) {
+  #personale-tabel thead { display: none; }
+  #personale-tabel, #personale-tabel tbody { display: block; }
+  #personale-tabel tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; padding: 10px 12px; border-bottom: 1px solid var(--kant); }
+  #personale-tabel td { display: block; padding: 0; border: none; }
+  #personale-tabel td:nth-child(4) { grid-column: 1 / -1; color: var(--daempet); font-size: .85rem; }
+  #personale-tabel td:nth-child(4)::before { content: "Sidst logget ind: "; }
+  #personale-tabel .handlinger { grid-column: 1 / -1; text-align: left; }
+  #personale-tabel .handlinger .knap { margin: 0 6px 0 0; }
+}
