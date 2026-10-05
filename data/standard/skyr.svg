@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+<defs></defs>
+<ellipse cx="100" cy="188" rx="48" ry="6" fill="#000" opacity=".3"/>
+<path d="M54 82 h92 l-10 92 q-1 6 -7 6 h-58 q-6 0 -7 -6z" fill="#ffffff"/><path d="M58 146 h84 l-3 26 h-78z" fill="#5a4fcf"/>
+<g fill="#3b3591"><circle cx="78" cy="160" r="5"/><circle cx="96" cy="164" r="5"/><circle cx="114" cy="158" r="5"/><circle cx="128" cy="166" r="5"/></g>
+<ellipse cx="100" cy="82" rx="48" ry="10" fill="#1b5fae"/><ellipse cx="100" cy="80" rx="40" ry="6" fill="#fff" opacity=".25"/>
+<text x="100" y="136" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="15" fill="#1b5fae">SKYR</text>
+<rect x="62" y="92" width="5" height="76" rx="2.5" fill="#fff" opacity=".4"/>
+</svg>

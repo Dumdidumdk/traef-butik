@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+<defs></defs>
+<ellipse cx="100" cy="188" rx="48" ry="6" fill="#000" opacity=".3"/>
+<g transform="rotate(-18 100 150)"><rect x="56" y="50" width="70" height="100" rx="8" fill="#fff" stroke="#ccc" stroke-width="2"/><path transform="translate(74 70) scale(0.7)" d="M0 -2 c-4 -7 -12 -4 -11 2 c1 5 11 12 11 12 c0 0 10 -7 11 -12 c1 -6 -7 -9 -11 -2z" fill="#e41e2b"/></g>
+<g transform="rotate(-4 100 150)"><rect x="64" y="46" width="70" height="100" rx="8" fill="#fff" stroke="#ccc" stroke-width="2"/><path transform="translate(82 66) scale(0.7)" d="M0 -12 c0 0 -11 8 -11 13 c0 5 7 7 10 2 l-3 9 h8 l-3 -9 c3 5 10 3 10 -2 c0 -5 -11 -13 -11 -13z" fill="#1a1a1a"/><path transform="translate(100 100) scale(1.6)" d="M0 -12 c0 0 -11 8 -11 13 c0 5 7 7 10 2 l-3 9 h8 l-3 -9 c3 5 10 3 10 -2 c0 -5 -11 -13 -11 -13z" fill="#1a1a1a"/></g>
+<g transform="rotate(12 100 150)"><rect x="72" y="50" width="70" height="100" rx="8" fill="#fff" stroke="#ccc" stroke-width="2"/><path transform="translate(90 70) scale(0.7)" d="M0 -2 c-4 -7 -12 -4 -11 2 c1 5 11 12 11 12 c0 0 10 -7 11 -12 c1 -6 -7 -9 -11 -2z" fill="#e41e2b"/><path transform="translate(108 102) scale(1.6)" d="M0 -2 c-4 -7 -12 -4 -11 2 c1 5 11 12 11 12 c0 0 10 -7 11 -12 c1 -6 -7 -9 -11 -2z" fill="#e41e2b"/></g>
+<rect x="40" y="138" width="120" height="44" rx="6" fill="#1b5fae"/><rect x="46" y="144" width="108" height="32" rx="4" fill="none" stroke="#fff" stroke-width="2" opacity=".6"/>
+</svg>

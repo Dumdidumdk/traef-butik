@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+<defs><clipPath id="sq"><path d="M90 30 h20 v6 c0 14 18 22 18 40 v94 q0 12 -12 12 h-32 q-12 0 -12 -12 v-94 c0 -18 18 -26 18 -40 z"/></clipPath></defs>
+<ellipse cx="100" cy="188" rx="48" ry="6" fill="#000" opacity=".3"/>
+<path d="M90 30 h20 v6 c0 14 18 22 18 40 v94 q0 12 -12 12 h-32 q-12 0 -12 -12 v-94 c0 -18 18 -26 18 -40 z" fill="#ff8c1a"/>
+<rect x="87" y="14" width="26" height="18" rx="3" fill="#e65c00"/>
+<rect x="87" y="26" width="26" height="4" fill="#000" opacity=".2"/>
+<g clip-path="url(#sq)">
+  <rect x="60" y="98" width="80" height="50" fill="#e65c00"/><circle cx="122" cy="108" r="9" fill="#ff9a1a"/><circle cx="122" cy="108" r="6.4799999999999995" fill="#ffc64d"/><g stroke="#ff9a1a" stroke-width="2"><path d="M122 108 l6.3 0.0 M122 108 l-6.3 0.0"/><path d="M122 108 l4.5 4.5 M122 108 l-4.5 -4.5"/><path d="M122 108 l0.0 6.3 M122 108 l-0.0 -6.3"/><path d="M122 108 l-4.5 4.5 M122 108 l4.5 -4.5"/></g>
+  <text x="100" y="129" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="15" fill="#fff" textLength="52" lengthAdjust="spacingAndGlyphs">SQUASH</text>
+</g>
+<path d="M80 80 q-2 4 -2 10 v74 q0 4 3 4" stroke="#fff" stroke-opacity=".35" stroke-width="5" fill="none" stroke-linecap="round"/>
+</svg>

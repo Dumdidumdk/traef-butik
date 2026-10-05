@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+<defs></defs>
+<ellipse cx="100" cy="188" rx="48" ry="6" fill="#000" opacity=".3"/>
+<path d="M126 74 l20 -10 v104 l-20 12z" fill="#4a2711"/>
+<path d="M64 74 l10 -24 h62 l10 14 l-20 10z" fill="#8c5329"/>
+<path d="M74 50 l2 -8 h58 l2 8z" fill="#4a2711"/>
+<rect x="64" y="74" width="62" height="106" fill="#6b3a1d"/>
+<text x="95" y="98" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="13" fill="#fff">KAKAO</text>
+<path d="M70 150 q12 -10 25 0 t25 0 v30 h-50z" fill="#fff" opacity=".9"/><path d="M80 132 l10 -6 l10 6 l10 -6" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/>
+<rect x="68" y="80" width="4" height="94" rx="2" fill="#fff" opacity=".22"/>
+</svg>

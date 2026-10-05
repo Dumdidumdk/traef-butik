@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+<defs><clipPath id="co"><path d="M92 44 h16 v24 c0 10 18 14 18 30 v74 q0 10 -10 10 h-32 q-10 0 -10 -10 v-74 c0 -16 18 -20 18 -30z"/></clipPath></defs>
+<ellipse cx="100" cy="188" rx="48" ry="6" fill="#000" opacity=".3"/>
+<path d="M92 44 h16 v24 c0 10 18 14 18 30 v74 q0 10 -10 10 h-32 q-10 0 -10 -10 v-74 c0 -16 18 -20 18 -30z" fill="#6b3e1f"/>
+<rect x="89" y="30" width="22" height="16" rx="3" fill="#c8102e"/>
+<g clip-path="url(#co)"><rect x="60" y="112" width="80" height="44" fill="#fff8ec"/><text x="100" y="141" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="16" fill="#5a2e14" textLength="46" lengthAdjust="spacingAndGlyphs">Cocio</text><rect x="60" y="112" width="80" height="4" fill="#c8102e"/></g>
+<path d="M80 102 q-2 4 -2 10 v58" stroke="#fff" stroke-opacity=".35" stroke-width="5" fill="none" stroke-linecap="round"/>
+</svg>

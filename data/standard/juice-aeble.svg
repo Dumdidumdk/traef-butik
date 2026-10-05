@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+<defs></defs>
+<ellipse cx="100" cy="188" rx="48" ry="6" fill="#000" opacity=".3"/>
+<path d="M126 74 l20 -10 v104 l-20 12z" fill="#5f9a1f"/>
+<path d="M64 74 l10 -24 h62 l10 14 l-20 10z" fill="#a8d86a"/>
+<path d="M74 50 l2 -8 h58 l2 8z" fill="#5f9a1f"/>
+<rect x="64" y="74" width="62" height="106" fill="#8cc63f"/>
+<path d="M120 52 l14 -30" stroke="#fff" stroke-width="5" stroke-linecap="round"/><path d="M120 52 l14 -30" stroke="#e8483a" stroke-width="5" stroke-dasharray="4 4" stroke-linecap="butt"/>
+<text x="95" y="98" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="13" fill="#fff">JUICE</text>
+<path d="M95 132.1 c-7.2 -8.1 -20.7 -5.3999999999999995 -18.900000000000002 9 c1.8 14.4 10.799999999999999 24.3 18.900000000000002 18.900000000000002 c8.1 5.3999999999999995 17.099999999999998 -4.5 18.900000000000002 -18.900000000000002 c1.8 -14.4 -11.700000000000001 -17.099999999999998 -18.900000000000002 -9z" fill="#d62f2f"/><path d="M95 133 q2 -8 6 -10" stroke="#5a3a1a" stroke-width="2.5" fill="none"/><path d="M98 128.5 q8 -8 14 -3 q-6 7 -14 3z" fill="#3fa34d"/>
+<rect x="68" y="80" width="4" height="94" rx="2" fill="#fff" opacity=".22"/>
+</svg>

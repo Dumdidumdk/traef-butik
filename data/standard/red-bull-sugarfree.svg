@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+<defs><clipPath id="rs"><path d="M68 30 q0 -8 8 -8 h48 q8 0 8 8 v146 q0 6 -8 6 h-48 q-8 0 -8 -6z"/></clipPath></defs>
+<ellipse cx="100" cy="188" rx="48" ry="6" fill="#000" opacity=".3"/>
+<path d="M68 30 q0 -8 8 -8 h48 q8 0 8 8 v146 q0 6 -8 6 h-48 q-8 0 -8 -6z" fill="#d6dde4"/>
+<g clip-path="url(#rs)"><path d="M60 20 h80 v24 l-40 14 l-40 -14z" fill="#9fd4f5"/><rect x="60" y="62" width="80" height="6" fill="#9fd4f5"/><circle cx="100" cy="100" r="18" fill="#ffd200"/><path d="M76 116 q10 -14 22 -10 l-4 -6 q8 4 6 12z M124 116 q-10 -14 -22 -10 l4 -6 q-8 4 -6 12z" fill="#d6001c"/>
+<text x="100" y="158" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="12" fill="#d6001c" textLength="56" lengthAdjust="spacingAndGlyphs">Red Bull</text>
+<text x="100" y="171" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="7" fill="#1b5fae">SUGARFREE</text></g>
+<ellipse cx="100" cy="24" rx="28" ry="5" fill="#d7dde3" stroke="#9aa3ab" stroke-width="1.5"/>
+<ellipse cx="104" cy="23" rx="6" ry="2" fill="#8d969e"/>
+<rect x="74" y="34" width="5" height="140" rx="2.5" fill="#fff" opacity=".22"/>
+</svg>
