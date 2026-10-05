@@ -56,7 +56,7 @@ async function main() {
     // ---------- opsætning ----------
     // Butikken har et par skærme/faner åbne – derfor flere forbindelser end én kunde.
     const p = server.browser('personale', { maxSockets: 18 });
-    assert.ok(ok2xx(await p.post('/api/personale/opsaet', { kode: 'belastning-123' })), 'Kunne ikke sætte personalekode');
+    assert.ok(ok2xx(await p.post('/api/personale/opsaet', { navn: 'Belastning', kode: 'belastning-123' })), 'Kunne ikke sætte personalekode');
     // Lavere grænse, så nogle ordrer bliver "bring til plads".
     const ind = (await p.get('/api/admin/indstillinger')).data;
     const somType = (gl, v) => (typeof gl === 'number' ? Number(v) : typeof gl === 'boolean' ? Boolean(Number(v)) : String(v));

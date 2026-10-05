@@ -266,7 +266,7 @@ async function main() {
 
     // Opsætning via API: personale, en vare, en kunde med penge og en ordre.
     const p = server.browser('personale');
-    if ((await p.post('/api/personale/opsaet', { kode: PERSONALE_KODE })).status !== 200) throw new Error('Kunne ikke sætte personalekode');
+    if ((await p.post('/api/personale/opsaet', { navn: 'Browser-admin', kode: PERSONALE_KODE })).status !== 200) throw new Error('Kunne ikke sætte personalekode');
     await p.post('/api/admin/deltagere', { pc_nr: 17, navn: 'Browser-Bente', pin: '1717', startbeloeb_oere: 20000 });
     const k = server.browser('kunde');
     await k.post('/api/kunde/login', { pc_nr: 17, pin: '1717' });

@@ -11,7 +11,11 @@ test\koer-tests.cmd hurtig    uden belastningstesten
 Enkeltvis (fra projektmappen):
 
 ```
-runtime\node\node.exe --test test\api.test.js    API-tests efter SPEC.md + tillæg 1 (node:test)
+runtime\node\node.exe --test test\api.test.js        API-tests efter SPEC.md + tillæg 1 (node:test)
+runtime\node\node.exe --test test\katalog.test.js    tillæg 2: varekatalog
+runtime\node\node.exe --test test\migration.test.js  tillæg 2+3: migration af en gammel database
+runtime\node\node.exe --test test\eksport.test.js    tillæg 2+3: salg som regneark (.xlsx)
+runtime\node\node.exe --test test\roller.test.js     tillæg 3: personale med roller
 runtime\node\node.exe test\belastning.js         250 kunder, SSE, samtidige ordrer, udbetaling
 runtime\node\node.exe test\browser.js            /, /butik, /admin i headless Chrome
 ```
@@ -34,6 +38,13 @@ Miljøvariabler:
   (serverpris, tom kurv, udsolgt, butik lukket, levering, ikke nok penge, samtidige ordrer), annullering,
   statusskift, indbetalinger, justering, udbetaling, adgang, SSE til rette modtager, billeder, sti-traversal,
   rapport. Efter hver test tjekkes, at saldo = sum af kontoudtog, og at ingen saldo er negativ.
+- `katalog.test.js` – katalogfilerne (gyldige, unikke id, billeder), første start, kun aktive for kunder, bulk-aktiv
+  med ét `varer`-event, kategorier, admins rettelser overlever genstart.
+- `migration.test.js` – database i det gamle format (`gammel-db.js`) migreres uden tab; personale_kode → "Admin".
+- `eksport.test.js` – pakker xlsx-filen ud med `xlsx.js` (egen zip- og XML-læser), tjekker faner, tal mod rapporten,
+  dansk tid, talformater, escaping af `& < > "` og æøå, "Udført af" og fanen Personale.
+- `roller.test.js` – rettigheder for admin og ekspedient på alle endpoints, sidste_admin, spærring (også SSE),
+  rate limit pr. navn, hvem-gjorde-hvad.
 - `belastning.js` – svartider (median/p95/maks) og tjek af 500-fejl, saldi, SSE og regnskab.
 - `browser.js` – JavaScript-fejl, fejlede filer, eksterne forespørgsler (skal virke uden internet), vandret
   scroll ved 360 px, og at nye ordrer/status dukker op live.

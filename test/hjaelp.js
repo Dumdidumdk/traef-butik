@@ -15,6 +15,23 @@ const SERVER_JS = path.join(ROD, 'server', 'server.js');
 // Standard-agent til kald uden browser; hver Browser har sin egen pulje (som en rigtig browser).
 const agent = new http.Agent({ keepAlive: true, maxSockets: Infinity });
 
+// Ny tom midlertidig mappe.
+function nyMappe(prefiks = 'traef-test-') {
+  return fs.mkdtempSync(path.join(os.tmpdir(), prefiks));
+}
+
+// Slet en mappe (SQLite-filer kan være låst et øjeblik på Windows).
+async function sletMappe(mappe) {
+  for (let i = 0; i < 20; i++) {
+    try {
+      fs.rmSync(mappe, { recursive: true, force: true });
+      return;
+    } catch {
+      await sleepTil(100);
+    }
+  }
+}
+
 function sleepTil(ms) {
   return new Promise((r) => setTimeout(r, ms));
 }
@@ -52,10 +69,11 @@ function raatKald({ port, metode = 'GET', sti, headers = {}, body = null, timeou
 }
 
 // Starter serveren som child process med fri port og ny DATA_DIR. Returnerer et server-objekt.
-async function startServer({ env = {}, logTilKonsol = false, ventMs = 30000 } = {}) {
+// dataDir: brug en eksisterende mappe (fx til migration og genstart); den slettes så ikke ved stop().
+async function startServer({ env = {}, logTilKonsol = false, ventMs = 30000, dataDir: egenDataDir } = {}) {
   if (!fs.existsSync(SERVER_JS)) throw new Error(`Serveren findes ikke: ${SERVER_JS}`);
   const port = await findLedigPort();
-  const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'traef-test-'));
+  const dataDir = egenDataDir || fs.mkdtempSync(path.join(os.tmpdir(), 'traef-test-'));
   const log = [];
   const proces = spawn(process.execPath, [SERVER_JS], {
     cwd: ROD,
@@ -120,15 +138,7 @@ async function startServer({ env = {}, logTilKonsol = false, ventMs = 30000 } = 
         proces.kill();
         await afslutning;
       }
-      // SQLite-filer kan være låst et øjeblik på Windows.
-      for (let i = 0; i < 20; i++) {
-        try {
-          fs.rmSync(dataDir, { recursive: true, force: true });
-          break;
-        } catch {
-          await sleepTil(100);
-        }
-      }
+      if (!egenDataDir) await sletMappe(dataDir);
     },
     _stroemme: new Set(),
     _browsere: new Set(),
@@ -417,6 +427,8 @@ async function parallelt(elementer, antal, fn) {
 
 module.exports = {
   ROD,
+  nyMappe,
+  sletMappe,
   SERVER_JS,
   findLedigPort,
   raatKald,
