@@ -1,0 +1,16 @@
+[
+  { "katalog_id": "coca-cola-05", "navn": "Coca-Cola 0,5 l", "beskrivelse": "Iskold klassiker", "kategori": "Drikke", "pris_oere": 2000, "billede": "coca-cola.svg", "standard_aktiv": true, "sortering": 10 },
+  { "katalog_id": "coca-cola-zero-05", "navn": "Coca-Cola Zero 0,5 l", "beskrivelse": "Uden sukker", "kategori": "Drikke", "pris_oere": 2000, "billede": "coca-cola-zero.svg", "standard_aktiv": true, "sortering": 20 },
+  { "katalog_id": "fanta-05", "navn": "Fanta 0,5 l", "beskrivelse": "Appelsinsodavand", "kategori": "Drikke", "pris_oere": 2000, "billede": "fanta.svg", "standard_aktiv": true, "sortering": 30 },
+  { "katalog_id": "faxe-kondi-05", "navn": "Faxe Kondi 0,5 l", "beskrivelse": "Citron-lime sodavand", "kategori": "Drikke", "pris_oere": 2000, "billede": "faxe-kondi.svg", "standard_aktiv": true, "sortering": 40 },
+  { "katalog_id": "monster-energy", "navn": "Monster Energy", "beskrivelse": "Energidrik 0,5 l", "kategori": "Energi", "pris_oere": 2500, "billede": "monster.svg", "standard_aktiv": true, "sortering": 50 },
+  { "katalog_id": "red-bull", "navn": "Red Bull", "beskrivelse": "Energidrik 0,25 l", "kategori": "Energi", "pris_oere": 2500, "billede": "red-bull.svg", "standard_aktiv": true, "sortering": 60 },
+  { "katalog_id": "vand-05", "navn": "Vand", "beskrivelse": "Kildevand 0,5 l", "kategori": "Drikke", "pris_oere": 1000, "billede": "vand.svg", "standard_aktiv": true, "sortering": 70 },
+  { "katalog_id": "kaffe", "navn": "Kaffe", "beskrivelse": "Sort kaffe", "kategori": "Varme drikke", "pris_oere": 1000, "billede": "kaffe.svg", "standard_aktiv": true, "sortering": 80 },
+  { "katalog_id": "toast-skinke-ost", "navn": "Toast med skinke og ost", "beskrivelse": "Varm toast", "kategori": "Mad", "pris_oere": 2500, "billede": "toast-skinke-ost.svg", "standard_aktiv": true, "sortering": 90 },
+  { "katalog_id": "toast-ost", "navn": "Toast med ost", "beskrivelse": "Varm toast", "kategori": "Mad", "pris_oere": 2000, "billede": "toast-ost.svg", "standard_aktiv": true, "sortering": 100 },
+  { "katalog_id": "vingummi-pose", "navn": "Pose vingummi", "beskrivelse": "Blandede vingummier", "kategori": "Slik og snacks", "pris_oere": 1500, "billede": "vingummi.svg", "standard_aktiv": true, "sortering": 110 },
+  { "katalog_id": "chips", "navn": "Chips", "beskrivelse": "Pose chips", "kategori": "Slik og snacks", "pris_oere": 2000, "billede": "chips.svg", "standard_aktiv": true, "sortering": 120 },
+  { "katalog_id": "snickers", "navn": "Snickers", "beskrivelse": "Chokoladebar", "kategori": "Slik og snacks", "pris_oere": 1200, "billede": "snickers.svg", "standard_aktiv": true, "sortering": 130 },
+  { "katalog_id": "pizza-slice", "navn": "Pizza-slice", "beskrivelse": "Varm pizza", "kategori": "Mad", "pris_oere": 3000, "billede": "pizza.svg", "standard_aktiv": true, "sortering": 140 }
+]

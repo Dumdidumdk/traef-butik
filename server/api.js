@@ -6,6 +6,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const D = require('./db');
 const sse = require('./sse');
+const eksport = require('./eksport');
 const {
   Fejl, fejl, nu, sendJson, sendFejl, laesBody, laesJson, laesCookies,
   saetCookie, sletCookie, heltal, tekst, bool, hash, tjekHash, nytToken,
@@ -31,6 +32,7 @@ const vareObj = (r) => ({
   aktiv: !!r.aktiv,
   udsolgt: !!r.udsolgt,
   sortering: r.sortering,
+  katalog_id: r.katalog_id ?? null,
 });
 
 const ORDRE_SQL = `SELECT o.*, d.pc_nr, d.navn,
@@ -521,6 +523,32 @@ async function adminNyVare(req, res) {
   sendJson(res, 200, vareObj(q('SELECT * FROM varer WHERE id = ?').get(Number(r.lastInsertRowid))));
 }
 
+// Sæt "sælges" for mange varer på én gang (tillæg 2)
+async function adminVarerAktiv(req, res) {
+  kraevPersonale(req);
+  const k = await laesJson(req);
+  const besked = 'ids skal være en liste af vare-id\'er.';
+  if (!Array.isArray(k.ids) || k.ids.length > 5000) throw fejl(400, 'ugyldige_ids', besked);
+  const ids = [...new Set(k.ids.map((v) => heltal(v, 1, MAKS_ID, 'ugyldige_ids', besked)))];
+  const aktiv = bool(k.aktiv, 'ugyldig_vaerdi', 'aktiv skal være sand/falsk.') ? 1 : 0;
+  let n = 0;
+  if (ids.length) {
+    const opd = q('UPDATE varer SET aktiv = ? WHERE id = ?');
+    tx(() => { for (const id of ids) n += opd.run(aktiv, id).changes; });
+    sendVarer();
+  }
+  sendJson(res, 200, { opdateret: n });
+}
+
+function adminKategorier(req, res) {
+  kraevPersonale(req);
+  const egne = q("SELECT DISTINCT kategori FROM varer WHERE kategori <> ''").all()
+    .map((r) => r.kategori)
+    .filter((k) => !D.KATEGORIER.includes(k))
+    .sort((a, b) => a.localeCompare(b, 'da'));
+  sendJson(res, 200, [...D.KATEGORIER, ...egne]);
+}
+
 function findVare(idTekst) {
   const id = idV(idTekst, 'vare_findes_ikke', 'Varen findes ikke.');
   const v = q('SELECT * FROM varer WHERE id = ?').get(id);
@@ -816,6 +844,9 @@ const RUTER = [
 
   ['GET', '/api/admin/varer', adminVarer],
   ['POST', '/api/admin/varer', adminNyVare],
+  ['POST', '/api/admin/varer/aktiv', adminVarerAktiv],
+  ['GET', '/api/admin/kategorier', adminKategorier],
+  ['GET', '/api/admin/eksport.xlsx', (req, res) => { kraevPersonale(req); eksport.send(res); }],
   ['PUT', '/api/admin/varer/:id', adminRetVare],
   ['DELETE', '/api/admin/varer/:id', adminSletVare],
   ['POST', '/api/admin/varer/:id/billede', adminVareBillede],
