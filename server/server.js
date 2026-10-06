@@ -7,6 +7,7 @@ const path = require('node:path');
 const D = require('./db');
 const api = require('./api');
 const sse = require('./sse');
+const opdatering = require('./opdatering');
 const { sikkerSti, sendFil, send404 } = require('./statisk');
 
 const PROJEKT = path.resolve(__dirname, '..');
@@ -94,6 +95,7 @@ function start({ port = Number(process.env.PORT) || 3000, dataDir = process.env.
   D.init(dataDir, PROJEKT);
   api.init(billedDir);
   sse.startPing();
+  opdatering.startBaggrundstjek(); // nyere version på GitHub? (vises diskret på admin-siden)
 
   const server = http.createServer(lavHandler(billedDir));
   server.keepAliveTimeout = 65000;
@@ -111,7 +113,7 @@ function start({ port = Number(process.env.PORT) || 3000, dataDir = process.env.
       api.saetKundeUrl(lan ? `http://${lan}${p === 80 ? '' : ':' + p}` : '');
       if (!stille) {
         console.log('');
-        console.log('  Træf-butikken kører!');
+        console.log(`  Træf-butikken kører! (v${opdatering.installeretVersion()})`);
         console.log(`  Data: ${dataDir}`);
         console.log('');
         for (const ip of ips.length ? ips : ['localhost']) {

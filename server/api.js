@@ -7,6 +7,7 @@ const crypto = require('node:crypto');
 const D = require('./db');
 const sse = require('./sse');
 const eksport = require('./eksport');
+const opdatering = require('./opdatering');
 const {
   Fejl, fejl, nu, sendJson, sendFejl, laesBody, laesJson, laesCookies,
   saetCookie, sletCookie, heltal, tekst, bool, hash, tjekHash, nytToken,
@@ -992,6 +993,7 @@ const RUTER = [
   ['GET', '/api/admin/indstillinger', adminIndstillinger],
   ['PUT', '/api/admin/indstillinger', adminRetIndstillinger],
   ['GET', '/api/admin/rapport', adminRapport],
+  ['GET', '/api/admin/version', (req, res) => { kraevAdmin(req); sendJson(res, 200, opdatering.status()); }],
 ].map(([metode, sti, fn]) => {
   const navne = [];
   const re = new RegExp('^' + sti.replace(/:(\w+)/g, (_, n) => (navne.push(n), '([^/]+)')) + '/?$');

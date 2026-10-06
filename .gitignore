@@ -1,3 +1,5 @@
 runtime/
 data/butik.db*
 data/billeder/
+backup/
+opdatering/

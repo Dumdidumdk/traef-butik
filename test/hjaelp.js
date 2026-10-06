@@ -77,7 +77,8 @@ async function startServer({ env = {}, logTilKonsol = false, ventMs = 30000, dat
   const log = [];
   const proces = spawn(process.execPath, [SERVER_JS], {
     cwd: ROD,
-    env: { ...process.env, PORT: String(port), DATA_DIR: dataDir, ...env },
+    // TRAEF_OPDATERING=0: testene spørger ikke GitHub om nye versioner (en test kan slå det til via env)
+    env: { ...process.env, PORT: String(port), DATA_DIR: dataDir, TRAEF_OPDATERING: '0', ...env },
     stdio: ['ignore', 'pipe', 'pipe'],
     windowsHide: true,
   });

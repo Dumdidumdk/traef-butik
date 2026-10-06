@@ -16,6 +16,7 @@ runtime\node\node.exe --test test\katalog.test.js    tillæg 2: varekatalog
 runtime\node\node.exe --test test\migration.test.js  tillæg 2+3: migration af en gammel database
 runtime\node\node.exe --test test\eksport.test.js    tillæg 2+3: salg som regneark (.xlsx)
 runtime\node\node.exe --test test\roller.test.js     tillæg 3: personale med roller
+runtime\node\node.exe --test test\opdatering.test.js automatisk opdatering (falsk GitHub, ingen internet nødvendigt)
 runtime\node\node.exe test\belastning.js         250 kunder, SSE, samtidige ordrer, udbetaling
 runtime\node\node.exe test\browser.js            /, /butik, /admin i headless Chrome
 ```
@@ -45,6 +46,13 @@ Miljøvariabler:
   dansk tid, talformater, escaping af `& < > "` og æøå, "Udført af" og fanen Personale.
 - `roller.test.js` – rettigheder for admin og ekspedient på alle endpoints, sidste_admin, spærring (også SSE),
   rate limit pr. navn, hvem-gjorde-hvad.
+- `opdatering.test.js` – versionsnumre, zip-udpakning (stier med `\`, over 260 tegn, `..`), og `scripts\opdater.js`
+  mod en falsk GitHub (`TRAEF_OPDATERING_URL`) på en kopi af installationen i en midlertidig mappe: uden internet,
+  GitHub svarer ikke (3 sek.), svar N/J, data\ bevares og kopieres til backup\, ny/samme node.exe, beskadiget
+  download, glemt versionsnummer, syntaksfejl, fejl midt i udskiftningen (alt rulles tilbage), butikken kører
+  allerede. `start-butik.cmd` køres helt: uden internet, og med J, hvor filen udskifter sig selv og den nye
+  version starter. Til sidst `/api/admin/version` med og uden "internet". Alle andre tests kører med
+  `TRAEF_OPDATERING=0`, så de aldrig spørger GitHub.
 - `belastning.js` – svartider (median/p95/maks) og tjek af 500-fejl, saldi, SSE og regnskab.
 - `browser.js` – JavaScript-fejl, fejlede filer, eksterne forespørgsler (skal virke uden internet), vandret
   scroll ved 360 px, og at nye ordrer/status dukker op live.

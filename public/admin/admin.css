@@ -338,3 +338,14 @@
   #personale-tabel .handlinger { grid-column: 1 / -1; text-align: left; }
   #personale-tabel .handlinger .knap { margin: 0 6px 0 0; }
 }
+
+/* Ny version på GitHub: lille diskret link i topbjælken */
+.ny-version {
+  display: inline-flex; align-items: center; min-height: 32px; padding: 0 .7em; border-radius: 999px;
+  border: 1px solid var(--kant); color: var(--daempet); font-size: .85rem; font-weight: 600; text-decoration: none; white-space: nowrap;
+}
+.ny-version:hover, .ny-version:focus-visible { color: var(--cyan); border-color: var(--cyan); }
+.ny-version b { color: var(--cyan); }
+@media (max-width: 600px) {
+  .ny-version .lang { display: none; }
+}

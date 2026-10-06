@@ -968,6 +968,20 @@ api('/api/info').then((i) => {
   if (i?.traef_navn) { traefNavn = i.traef_navn; $('#traef-navn').textContent = i.traef_navn; }
   if (i?.kunde_url) kundeAdresse = String(i.kunde_url).replace(/^https?:\/\//, '').replace(/\/$/, '');
 }).catch(() => {});
+// Nyere version på GitHub? Serveren tjekker selv i baggrunden; uden internet sker der ingenting.
+if (erAdmin()) {
+  api('/api/admin/version').then((v) => {
+    if (!v?.ny || !/^https:\/\/github\.com\//.test(v.ny.url || '')) return;
+    const a = document.createElement('a');
+    a.className = 'ny-version';
+    a.href = v.ny.url;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    a.title = `Du har v${v.version}. Den nye version kan installeres, næste gang start-butik.cmd startes.`;
+    a.innerHTML = `<span class="lang">Ny version </span><b>v${esc(v.ny.version)}</b><span class="lang"> findes</span>`;
+    $('.top-knapper').prepend(a);
+  }).catch(() => {});
+}
 visFane();
 if (aktivFane !== 'indbetalinger') hentIndbetalinger();
 // Live: nye indbetalinger opdaterer badge og listen
