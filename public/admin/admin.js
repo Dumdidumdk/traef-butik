@@ -39,11 +39,26 @@ function fanerKanter() {
   fanerEl.classList.toggle('kan-hoejre', fanerEl.scrollLeft < max - 2);
 }
 fanerEl.addEventListener('scroll', fanerKanter, { passive: true });
-addEventListener('resize', fanerKanter);
+addEventListener('resize', visAktivFane);
+// Den aktive fane rulles helt frem – også forbi fade-kanten (56px i admin.css)
+const FADE = 56;
 function visAktivFane() {
-  $('.fane[aria-selected="true"]')?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  const a = $('.fane[aria-selected="true"]');
+  const max = fanerEl.scrollWidth - fanerEl.clientWidth;
+  if (a && max > 0) {
+    const fr = fanerEl.getBoundingClientRect(), ar = a.getBoundingClientRect();
+    const venstre = ar.left - fr.left + fanerEl.scrollLeft, hoejre = venstre + ar.width;
+    let ny = fanerEl.scrollLeft;
+    if (hoejre > ny + fanerEl.clientWidth - FADE) ny = hoejre - fanerEl.clientWidth + FADE;
+    if (venstre < ny + FADE) ny = venstre - FADE;
+    fanerEl.scrollLeft = Math.max(0, Math.min(max, ny));
+  }
   fanerKanter();
 }
+// Fanernes bredde ændrer sig efter første visning (skrifttype, badge, faner der skjules for ekspedienter)
+const fanerObs = new ResizeObserver(visAktivFane);
+fanerObs.observe(fanerEl);
+document.querySelectorAll('.fane').forEach((f) => fanerObs.observe(f));
 
 // ================= VARER (katalog) =================
 let varer = [];

@@ -241,9 +241,17 @@ body { display: flex; flex-direction: column; overflow: hidden; }
   .bruger-navn { max-width: 10em; }
 }
 @media (min-width: 1280px) and (max-width: 1439px) {
-  .bruger-navn { max-width: 7em; }
-  .top-titel { gap: 10px; }
-  .top-vaerktoej { gap: 6px; }
+  /* Pladsen tages fra titlen: værktøjet og navnet (op til 7em) krymper ikke, og søgefeltet har plads til sin placeholder */
+  .top { gap: 10px 12px; }
+  .top-titel { gap: 8px; }
+  .top h1 { min-width: 4.5em; }
+  .bruger { flex-shrink: 0; gap: 5px; }
+  .bruger-navn { flex-shrink: 0; max-width: 7em; }
+  .rolle-maerke { padding: 1px 5px; letter-spacing: 0; font-size: .68rem; }
+  .top-vaerktoej { flex: 0 0 auto; gap: 5px; }
+  .top-vaerktoej > .soeg { flex: 0 0 auto; min-width: 0; }
+  .top-vaerktoej > .soeg input { width: 10.5em; }
+  .top .knap.lille:not(.ikon-knap) { padding-left: .6em; padding-right: .6em; }
 }
 .udsolgt-kat { margin: 14px 0 6px; font-size: .9rem; text-transform: uppercase; letter-spacing: .06em; color: var(--cyan); }
 .udsolgt-kat:first-child { margin-top: 0; }
